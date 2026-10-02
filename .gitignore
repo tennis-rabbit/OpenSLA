@@ -1,2 +1,5 @@
 preview/
 __pycache__/
+
+# The manuscript is not distributed from this repository.
+*.pdf
