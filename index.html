@@ -14,10 +14,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;1,400&family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=6">
+  <link rel="stylesheet" href="styles.css?v=7">
   <script>document.documentElement.classList.add("js");</script>
   <script src="vendor/lucide.min.js" defer></script>
-  <script src="app.js?v=3" defer></script>
+  <script src="app.js?v=4" defer></script>
 </head>
 <body id="top">
 
@@ -262,7 +262,7 @@
       <div class="view view-main">
         <div class="split">
           <div class="split-visual reveal">
-            <div class="tiles">
+            <div class="tiles" data-open>
               <div class="tile a-blue">
                 <span class="tile-label">Respiration rate &middot; clinical</span>
                 <span class="tile-value">1.17</span>
@@ -317,7 +317,15 @@
             <button class="discover-btn" type="button"><span class="d-label">Discover more</span><i data-lucide="arrow-right" aria-hidden="true"></i></button>
           </div>
           <div class="split-visual reveal">
-            <div class="cluster"><div class="cluster-plot" aria-hidden="true"></div><p class="viz-note">Schematic of the learned action space. The measured embedding is one click away.</p></div>
+            <div class="cluster">
+              <div class="cluster-plot" data-open>
+                <canvas aria-hidden="true"></canvas>
+                <span class="cl-tag" data-group="opioid" style="--x:.717;--y:.094;--c:#6fb6d6">Opioid analgesics</span>
+                <span class="cl-tag" data-group="abx" style="--x:.483;--y:.881;--c:#e8826b">Antibiotics</span>
+                <span class="cl-tag unseen" data-group="imi" style="--x:.157;--y:.288;--c:#664cbc">Imipenem &middot; unseen</span>
+              </div>
+              <p class="viz-hint"><i data-lucide="mouse-pointer-click" aria-hidden="true"></i> Schematic &mdash; hover to explore, click for the measured embedding</p>
+            </div>
           </div>
         </div>
       </div>
@@ -347,7 +355,7 @@
       <div class="view view-main">
         <div class="split">
           <div class="split-visual reveal">
-            <div class="dose" aria-label="Insulin dose of the nearest real sample along an interpolation between two representations: 0.05, 1.2, 7.7, then 14.4 units.">
+            <div class="dose" data-open aria-label="Insulin dose of the nearest real sample along an interpolation between two representations: 0.05, 1.2, 7.7, then 14.4 units.">
               <div class="dose-line" aria-hidden="true"></div>
               <div class="dose-node end" style="--s:.34"><span class="dose-dot"></span><b>0.05&nbsp;U</b><em>endpoint</em></div>
               <div class="dose-node" style="--s:.5"><span class="dose-dot"></span><b>1.2&nbsp;U</b><em>nearest real sample</em></div>
