@@ -455,7 +455,7 @@
     if ("IntersectionObserver" in window && !reduceMotion.matches) {
       var seen = new IntersectionObserver(function (entries) {
         if (entries.some(function (en) { return en.isIntersecting; })) { seen.disconnect(); ask("state"); }
-      }, { threshold: 0.35 });
+      }, { threshold: 0.6 });
       seen.observe(chat);
     } else { ask("state"); }
   })();
