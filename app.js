@@ -492,11 +492,47 @@
       '<defs><mask id="' + maskId + '"><rect width="' + W + '" height="' + H + '" fill="#fff"/><g class="holes"></g></mask></defs>' +
       '<rect class="dim" width="' + W + '" height="' + H + '" mask="url(#' + maskId + ')"/><g class="boxes"></g>';
     var holes = $(".holes", svg), boxes = $(".boxes", svg);
-    var pinned = null;
+    var pinned = null, current = null;
+    var img = $(".ground-stage img", g);
+    var lines = document.createElementNS(SVGNS, "svg");             // leader lines, drawn in the block's own coordinates
+    lines.setAttribute("class", "ground-lines"); lines.setAttribute("aria-hidden", "true");
+    g.appendChild(lines);
+    var stacked = window.matchMedia("(max-width: 1020px)");
+
+    function connect(span, color) {
+      lines.innerHTML = "";
+      if (!span || stacked.matches) return;
+      var gr = g.getBoundingClientRect(), sr = span.getBoundingClientRect(), ir = img.getBoundingClientRect();
+      var sx = ir.width / W, sy = ir.height / H, pad = 6;
+      var vertical = ir.bottom <= sr.top + 4;                          // figure above the text (How it works)
+      var sideways = ir.right <= sr.left + 4;                          // figure to the left of the text
+      if (!vertical && !sideways) return;
+      var x0 = (sideways ? sr.left : sr.left + sr.width / 2) - gr.left, y0 = (sideways ? sr.top + sr.height / 2 : sr.top) - gr.top;
+      span.getAttribute("data-to").split(",").forEach(function (key) {
+        var r0 = regions[key.trim()]; if (!r0) return;
+        (Array.isArray(r0[0]) ? r0 : [r0]).forEach(function (b) {
+          var bx = ir.left - gr.left, by = ir.top - gr.top;
+          var x1 = sideways ? bx + (b[2] + pad) * sx : bx + (b[0] + b[2]) / 2 * sx;
+          var y1 = sideways ? by + (b[1] + b[3]) / 2 * sy : by + (b[3] + pad) * sy;
+          var d = sideways
+            ? "M" + x0 + " " + y0 + " C" + (x0 - Math.max(48, (x0 - x1) / 2)) + " " + y0 + ", " + (x1 + Math.max(48, (x0 - x1) / 2)) + " " + y1 + ", " + x1 + " " + y1
+            : "M" + x0 + " " + y0 + " C" + x0 + " " + (y0 - Math.max(40, (y0 - y1) / 2)) + ", " + x1 + " " + (y1 + Math.max(40, (y0 - y1) / 2)) + ", " + x1 + " " + y1;
+          var p = document.createElementNS(SVGNS, "path");
+          p.setAttribute("d", d); p.setAttribute("stroke", color); p.setAttribute("pathLength", "1"); lines.appendChild(p);
+          var dot = document.createElementNS(SVGNS, "circle");
+          dot.setAttribute("cx", x1); dot.setAttribute("cy", y1); dot.setAttribute("r", 4); dot.setAttribute("fill", color); lines.appendChild(dot);
+        });
+      });
+      var o = document.createElementNS(SVGNS, "circle");
+      o.setAttribute("cx", x0); o.setAttribute("cy", y0); o.setAttribute("r", 4); o.setAttribute("fill", color); lines.appendChild(o);
+    }
+    function relink() { if (current) connect(current, getComputedStyle(current.closest(".gblock") || current).getPropertyValue("--acc").trim() || "#664cbc"); }
+    window.addEventListener("scroll", relink, { passive: true });   // the figure is sticky, so the geometry moves while scrolling
+    window.addEventListener("resize", relink, { passive: true });
 
     function show(span) {
-      holes.innerHTML = ""; boxes.innerHTML = "";
-      if (!span) { svg.classList.remove("on"); return; }
+      holes.innerHTML = ""; boxes.innerHTML = ""; current = span;
+      if (!span) { svg.classList.remove("on"); lines.innerHTML = ""; return; }
       var color = getComputedStyle(span.closest(".gblock") || span).getPropertyValue("--acc").trim() || "#664cbc";
       span.getAttribute("data-to").split(",").forEach(function (key) {
         var r0 = regions[key.trim()]; if (!r0) return;
@@ -513,6 +549,7 @@
         });
       });
       svg.classList.add("on");
+      connect(span, color);
     }
     // steps light the figure in turn until the reader points at one
     var auto = +g.getAttribute("data-auto");
