@@ -4,11 +4,9 @@
   var $ = function (sel, root) { return (root || document).querySelector(sel); };
   var $$ = function (sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); };
   var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-  var narrow = window.matchMedia("(max-width: 820px)");
   var SVGNS = "http://www.w3.org/2000/svg";
 
   function icons() { if (window.lucide) window.lucide.createIcons(); }
-  function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
 
   /* ---------- Nav: background on scroll, mobile menu ---------- */
   var nav = $("#nav");
@@ -25,110 +23,74 @@
     if (e.target.tagName === "A") { menu.classList.remove("open"); toggle.setAttribute("aria-expanded", "false"); }
   });
 
-  /* ---------- Scroll-scrubbed frame sequences (Figure 1 in the hero, Figure 3 in How it works) ----------
-     A tall track holds a sticky stage; scroll progress through the track picks a frame. Frames load in
-     passes (every 8th, every 4th, then all) so scrubbing works before the whole sequence is in. */
-  function Scrubber(canvas, onProgress) {
-    var track = canvas.closest(".scrub-track");
-    var dir = canvas.getAttribute("data-frames"), count = +canvas.getAttribute("data-count");
-    var start = +canvas.getAttribute("data-start") || 0, FW = +canvas.getAttribute("data-w"), FH = +canvas.getAttribute("data-h");
-    var ctx = canvas.getContext("2d");
-    var frames = new Array(count), current = -1, progress = 0;
-    var isStatic = reduceMotion.matches || narrow.matches;
-    var section = track.parentNode;
-    if (isStatic) section.classList.add("static");
-
-    function src(i) { return dir + "/" + String(i).padStart(3, "0") + ".webp"; }
-    function load(i, cb) {
-      if (frames[i]) { if (cb) cb(); return; }
-      var im = new Image();
-      im.onload = function () { frames[i] = im; if (cb) cb(); };
-      im.src = src(i);
-    }
-    function nearestLoaded(i) {
-      for (var d = 0; d < count; d++) {
-        if (frames[i - d]) return i - d;
-        if (frames[i + d]) return i + d;
-      }
-      return -1;
-    }
-    function size() {
-      var dpr = Math.min(window.devicePixelRatio || 1, 2);
-      var w = canvas.clientWidth, h = canvas.clientHeight || Math.round(w * FH / FW);
-      if (!w) return false;
-      if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) {
-        canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        current = -1;
-      }
-      return true;
-    }
-    function paint(i, force) {
-      if (!size()) return;
-      var j = nearestLoaded(i);
-      if (j < 0 || (j === current && !force)) return;
-      var im = frames[j], w = canvas.clientWidth, h = canvas.clientHeight;
-      var s = Math.min(w / FW, h / FH), dw = FW * s, dh = FH * s;      // contain, centred
-      ctx.clearRect(0, 0, w, h);
-      ctx.drawImage(im, (w - dw) / 2, (h - dh) / 2, dw, dh);
-      current = j;
-    }
-    function target() { return isStatic ? count - 1 : start + Math.round(progress * (count - 1 - start)); }
-    function update() {
-      if (!isStatic) {
-        var r = track.getBoundingClientRect(), span = track.offsetHeight - window.innerHeight;
-        progress = span > 0 ? clamp(-r.top / span, 0, 1) : 1;
-      }
-      var i = target();
-      if (!frames[i]) load(i, function () { paint(target(), false); });
-      paint(i, false);
-      if (onProgress) onProgress(progress, i);
-    }
-
-    // first frame, then the rest in widening passes
-    load(isStatic ? count - 1 : start, function () { update(); });
-    if (!isStatic) {
-      var order = [];
-      [8, 4, 2, 1].forEach(function (step) { for (var i = start; i < count; i += step) if (order.indexOf(i) < 0) order.push(i); });
-      var k = 0;
-      (function next() {
-        if (k >= order.length) return;
-        var i = order[k++];
-        load(i, function () { if (i === target()) paint(i, false); next(); });
-      })();
-    }
-
-    var ticking = false;
-    function onScrollTick() { if (!ticking) { ticking = true; requestAnimationFrame(function () { ticking = false; update(); }); } }
-    window.addEventListener("scroll", onScrollTick, { passive: true });
-    window.addEventListener("resize", function () { current = -1; update(); }, { passive: true });
-    update();
-  }
-
-  /* ---------- Hero: lead lines light up as the figure assembles ---------- */
+  /* ---------- Typewriter for the three hero lines (types once) ---------- */
   (function () {
-    var canvas = $(".hero .scrub");
-    if (!canvas) return;
-    var lines = $$(".hero-line"), hint = $(".hero-hint");
-    Scrubber(canvas, function (p) {
-      lines.forEach(function (l) { l.classList.toggle("on", p >= +l.getAttribute("data-at")); });
-      if (hint) hint.classList.toggle("off", p > 0.03);
+    var lines = $$(".ln-content[data-type]").map(function (host) {
+      var full = host.getAttribute("data-type");
+      var ghost = document.createElement("span");   // reserves the final size so nothing reflows
+      ghost.className = "ln-ghost"; ghost.textContent = full; ghost.setAttribute("aria-hidden", "true");
+      var text = document.createElement("span");
+      text.className = "ln-text";
+      var typed = document.createElement("span");
+      text.appendChild(typed);
+      host.appendChild(ghost); host.appendChild(text);
+      host.setAttribute("aria-label", full);
+      return { full: full, text: text, typed: typed };
     });
+    if (!lines.length) return;
+    if (reduceMotion.matches) { lines.forEach(function (l) { l.typed.textContent = l.full; }); return; }
+
+    var caret = document.createElement("span");
+    caret.className = "caret"; caret.setAttribute("aria-hidden", "true");
+    var li = 0, ci = 0;
+    function next() {
+      if (li >= lines.length) { setTimeout(function () { caret.remove(); }, 2400); return; }
+      lines[li].text.appendChild(caret);
+      ci = 0; tick();
+    }
+    function tick() {
+      var l = lines[li];
+      l.typed.textContent = l.full.slice(0, ++ci);
+      if (ci < l.full.length) setTimeout(tick, 16 + Math.random() * 26);
+      else { li++; setTimeout(next, 520); }
+    }
+    setTimeout(next, 600);
   })();
 
-  /* ---------- How it works: steps follow the drawing ---------- */
-  (function () {
-    var canvas = $("#how .scrub");
-    if (!canvas) return;
-    var steps = $$("#how-steps li");
-    Scrubber(canvas, function (p) {
-      var active = 0;
-      steps.forEach(function (s, i) { if (p >= +s.getAttribute("data-from")) active = i; });
-      steps.forEach(function (s, i) { s.classList.toggle("on", i === active); s.classList.toggle("done", i < active); });
-    });
-  })();
+  /* ---------- Figures: the animation loads once the figure is on screen, with a pause button ---------- */
+  $$("img[data-animation]").forEach(function (img) {
+    var frame = img.closest("figure");
+    var btn = $(".anim-toggle", frame);
+    var poster = img.getAttribute("src"), anim = img.getAttribute("data-animation");
+    var loaded = false, loading = false, playing = false;
 
-  /* ---------- Waveform shapes for the illustrative traces in the demo card ---------- */
+    function paint() {
+      img.src = playing ? anim : poster;
+      btn.setAttribute("aria-label", playing ? "Pause animation" : "Play animation");
+      btn.innerHTML = '<i data-lucide="' + (playing ? "pause" : "play") + '" aria-hidden="true"></i>';
+      icons();
+    }
+    function load(thenPlay) {
+      if (loaded || loading) return;
+      loading = true;
+      var pre = new Image();
+      pre.onload = function () { loaded = true; playing = thenPlay; btn.hidden = false; paint(); };
+      pre.onerror = function () { loading = false; };
+      pre.src = anim;
+    }
+    btn.addEventListener("click", function () {
+      if (!loaded) { load(true); return; }
+      playing = !playing; paint();
+    });
+
+    if (reduceMotion.matches || !("IntersectionObserver" in window)) { btn.hidden = false; paint(); return; }
+    var seen = new IntersectionObserver(function (entries) {
+      if (entries.some(function (en) { return en.isIntersecting; })) { seen.disconnect(); load(true); }
+    }, { rootMargin: "200px 0px" });
+    seen.observe(img);
+  });
+
+  /* ---------- Waveform shapes, shared by the hero stage and the demo card ---------- */
   function gauss(u, m, s) { var d = (u - m) / s; return Math.exp(-0.5 * d * d); }
   var wave = {
     ecg: function (x, period) {
@@ -137,8 +99,81 @@
            - 0.26 * gauss(u, 0.34, 0.011) + 0.30 * gauss(u, 0.56, 0.05);
     },
     resp: function (x, period) { return Math.sin(2 * Math.PI * x / period) * (0.72 + 0.28 * Math.sin(2 * Math.PI * x / (period * 6.3))); },
-    hr:   function (x) { return 0.55 * Math.sin(x / 150) + 0.3 * Math.sin(x / 47 + 1) + 0.15 * Math.sin(x / 19 + 2); }
+    hr:   function (x) { return 0.55 * Math.sin(x / 150) + 0.3 * Math.sin(x / 47 + 1) + 0.15 * Math.sin(x / 19 + 2); },
+    cgm:  function (x) { return 0.7 * Math.sin(x / 230) + 0.3 * Math.sin(x / 90 + 0.6); }
   };
+
+  /* ---------- Hero stage: scrolling sensor traces with capability markers ---------- */
+  (function () {
+    var stage = $(".stage");
+    if (!stage) return;
+    var canvas = $(".traces", stage);
+    var ctx = canvas.getContext("2d");
+    var stars = $$(".star", stage);
+    var TRACES = [
+      { y: 0.18, color: "#3f7fc4", amp: 0.20, speed: 34, fn: function (x) { return wave.ecg(x, 128) - 0.3; } },
+      { y: 0.40, color: "#4f9d69", amp: 0.075, speed: 20, fn: function (x) { return wave.resp(x, 150); } },
+      { y: 0.62, color: "#d9577a", amp: 0.06, speed: 12, fn: wave.hr, beads: 30 },
+      { y: 0.84, color: "#dd8a2f", amp: 0.07, speed: 8, fn: wave.cgm, beads: 16, beadsOnly: true }
+    ];
+    var w = 0, h = 0;
+
+    function resize() {
+      var dpr = window.devicePixelRatio || 1;
+      w = stage.clientWidth; h = stage.clientHeight;
+      canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    function draw(t) {
+      ctx.clearRect(0, 0, w, h);
+      var dim = stage.classList.contains("has-active");
+      TRACES.forEach(function (tr) {
+        var off = t * tr.speed, cy = tr.y * h, a = tr.amp * h, x;
+        ctx.globalAlpha = dim ? 0.28 : 0.62;
+        ctx.strokeStyle = tr.color; ctx.fillStyle = tr.color;
+        ctx.lineWidth = 1.6; ctx.lineJoin = "round"; ctx.lineCap = "round";
+        if (!tr.beadsOnly) {
+          ctx.beginPath();
+          for (x = 0; x <= w; x += 2) {
+            var y = cy - a * tr.fn(x + off);
+            if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+          }
+          ctx.stroke();
+        }
+        if (tr.beads) {
+          for (x = -(off % tr.beads); x <= w; x += tr.beads) {
+            ctx.beginPath();
+            ctx.arc(x, cy - a * tr.fn(x + off), tr.beadsOnly ? 2.4 : 2.8, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+      });
+      ctx.globalAlpha = 1;
+    }
+
+    function frame(ms) { draw(ms / 1000); if (!reduceMotion.matches) requestAnimationFrame(frame); }
+    function start() { resize(); if (reduceMotion.matches) draw(0); else requestAnimationFrame(frame); }
+
+    window.addEventListener("resize", function () { resize(); if (reduceMotion.matches) draw(0); }, { passive: true });
+    reduceMotion.addEventListener("change", start);
+    start();
+
+    function select(star) {
+      stars.forEach(function (s) { s.classList.toggle("active", s === star); });
+      stage.classList.toggle("has-active", !!star);
+      if (reduceMotion.matches) draw(0);
+    }
+    stars.forEach(function (s) {
+      s.addEventListener("mouseenter", function () { select(s); });
+      s.addEventListener("focus", function () { select(s); });
+      s.addEventListener("blur", function () { select(null); });
+      s.addEventListener("click", function (e) { e.stopPropagation(); select(s); });
+    });
+    stage.addEventListener("mouseleave", function () { select(null); });
+    document.addEventListener("click", function () { select(null); });
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape") select(null); });
+  })();
 
   /* ---------- Reveal on scroll ---------- */
   var reveals = $$(".reveal");
@@ -447,8 +482,8 @@
   /* ---------- Figure zoom ---------- */
   (function () {
     var dialog = $("#zoom"), big = $("#zoom-img"), title = $("#zoom-title");
-    if (!dialog || !dialog.showModal) { $$(".zoom-btn, .scrub-zoom").forEach(function (b) { b.hidden = true; }); return; }
-    $$(".zoom-btn, .scrub-zoom").forEach(function (btn) {
+    if (!dialog || !dialog.showModal) { $$(".zoom-btn").forEach(function (b) { b.hidden = true; }); return; }
+    $$(".zoom-btn").forEach(function (btn) {
       var fig = btn.closest("figure"), img = fig ? $("img", fig) : null, cap = fig ? $("figcaption", fig) : null;
       btn.addEventListener("click", function () {
         big.src = btn.getAttribute("data-src") || (img && (img.currentSrc || img.src)) || "";

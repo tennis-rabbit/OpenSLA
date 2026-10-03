@@ -14,10 +14,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;1,400&family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=9">
+  <link rel="stylesheet" href="styles.css?v=10">
   <script>document.documentElement.classList.add("js");</script>
   <script src="vendor/lucide.min.js" defer></script>
-  <script src="app.js?v=6" defer></script>
+  <script src="app.js?v=7" defer></script>
 </head>
 <body id="top">
 
@@ -44,49 +44,83 @@
 
 <main>
 
-<!-- ============ Hero: the paper's Figure 1 assembles as you scroll ============ -->
+<!-- ============ Hero ============ -->
 <section class="hero">
-  <div class="scrub-track hero-track">
-    <div class="hero-sticky">
-      <div class="hero-bg" aria-hidden="true">
-        <span class="orb orb-p"></span>
-        <span class="orb orb-b"></span>
-        <span class="orb orb-o"></span>
-        <div class="grid-fade"></div>
+  <div class="hero-bg" aria-hidden="true">
+    <span class="orb orb-p"></span>
+    <span class="orb orb-b"></span>
+    <span class="orb orb-o"></span>
+    <div class="grid-fade"></div>
+  </div>
+
+  <div class="wrap hero-inner">
+    <!-- Live sensor traces; each marker is one thing OpenSLA does with them -->
+    <div class="stage reveal" aria-label="What OpenSLA does with a sensor recording">
+      <canvas class="traces" aria-hidden="true"></canvas>
+      <span class="trace-name" style="top:18%" aria-hidden="true">ECG</span>
+      <span class="trace-name" style="top:40%" aria-hidden="true">Resp</span>
+      <span class="trace-name" style="top:62%" aria-hidden="true">HR</span>
+      <span class="trace-name" style="top:84%" aria-hidden="true">CGM</span>
+
+      <button class="star" style="--x:.21;--y:.18" type="button" aria-label="Multi-level actions">
+        <span class="dot"></span><span class="tag">Multi-level actions</span>
+        <span class="card"><b>Whether, what kind, which one</b><span>One shared hierarchy across every dataset: action necessity, action category, and the fine-grained label.</span></span>
+      </button>
+      <button class="star" style="--x:.49;--y:.40" type="button" aria-label="State understanding">
+        <span class="dot"></span><span class="tag">State understanding</span>
+        <span class="card"><b>It reads the signal itself</b><span>Generated captions recover rates, ranges, and waveform patterns directly from the sensor history.</span></span>
+      </button>
+      <button class="star" style="--x:.31;--y:.62" type="button" aria-label="Evidence grounding">
+        <span class="dot"></span><span class="tag">Evidence grounding</span>
+        <span class="card"><b>It says why</b><span>Each action comes with the sensor findings and individual context that support it.</span></span>
+      </button>
+      <button class="star" style="--x:.73;--y:.18" type="button" aria-label="Unseen actions">
+        <span class="dot"></span><span class="tag">Unseen actions</span>
+        <span class="card"><b>Beyond the label set</b><span>An antibiotic that was never a training target is still told apart from no action, with the model frozen.</span></span>
+      </button>
+      <button class="star ar" style="--x:.87;--y:.62" type="button" aria-label="New cohorts">
+        <span class="dot"></span><span class="tag">New cohorts</span>
+        <span class="card"><b>Transfers without adaptation</b><span>Evaluated on an external clinical cohort, MIMIC-IV, with no additional fine-tuning.</span></span>
+      </button>
+      <button class="star up" style="--x:.63;--y:.84" type="button" aria-label="Future state">
+        <span class="dot"></span><span class="tag">Future state</span>
+        <span class="card"><b>A glimpse of what comes next</b><span>Frozen representations support readouts of glucose dynamics over the following two hours.</span></span>
+      </button>
+    </div>
+
+    <div class="hero-head">
+      <div class="hero-title">
+        <h1><span class="open">Open</span><span class="grad-text">SLA</span></h1>
+        <p class="type-line"><span>S</span>ensor-<span>L</span>anguage-<span>A</span>ction Models</p>
+        <p class="byline">
+          <a href="https://yuekaixueric.github.io/" target="_blank" rel="noopener">Yuekai Xu</a><sup>*</sup>,
+          <a href="https://zitao-shuai.github.io/" target="_blank" rel="noopener">Zitao Shuai</a><sup>*</sup>,
+          <a href="https://web.cs.ucla.edu/~yuzhe/" target="_blank" rel="noopener">Yuzhe Yang</a>
+          <span class="affil">University of California, Los Angeles &middot; <sup>*</sup>equal contribution</span>
+        </p>
+        <div class="cta-row hero-cta">
+          <span class="btn ghost is-soon" aria-disabled="true"><i data-lucide="file-text" aria-hidden="true"></i> Paper <span class="soon">Soon</span></span>
+          <span class="btn ghost is-soon" aria-disabled="true"><i data-lucide="code-xml" aria-hidden="true"></i> Code <span class="soon">Soon</span></span>
+          <a class="btn ghost" href="#cite"><i data-lucide="quote" aria-hidden="true"></i> Cite</a>
+        </div>
       </div>
-
-      <div class="wrap hero-inner">
-        <div class="hero-head">
-          <div class="hero-title">
-            <h1><span class="open">Open</span><span class="grad-text">SLA</span></h1>
-            <p class="type-line"><span>S</span>ensor-<span>L</span>anguage-<span>A</span>ction Models</p>
-            <p class="byline">
-              <a href="https://yuekaixueric.github.io/" target="_blank" rel="noopener">Yuekai Xu</a><sup>*</sup>,
-              <a href="https://zitao-shuai.github.io/" target="_blank" rel="noopener">Zitao Shuai</a><sup>*</sup>,
-              <a href="https://web.cs.ucla.edu/~yuzhe/" target="_blank" rel="noopener">Yuzhe Yang</a>
-              <span class="affil">University of California, Los Angeles &middot; <sup>*</sup>equal contribution</span>
-            </p>
-          </div>
-          <div class="cta-row hero-cta">
-            <span class="btn ghost is-soon" aria-disabled="true"><i data-lucide="file-text" aria-hidden="true"></i> Paper <span class="soon">Soon</span></span>
-            <span class="btn ghost is-soon" aria-disabled="true"><i data-lucide="code-xml" aria-hidden="true"></i> Code <span class="soon">Soon</span></span>
-            <a class="btn ghost" href="#cite"><i data-lucide="quote" aria-hidden="true"></i> Cite</a>
-          </div>
+      <div class="hero-type">
+        <div class="lead-list" id="lead-lines">
+          <div class="lead-line"><span class="ln-no">Sensor</span><span class="ln-content" data-type="79 modalities, from bedside waveforms to glucose monitors."></span></div>
+          <div class="lead-line"><span class="ln-no">Language</span><span class="ln-content" data-type="A semantic interface linking signals, context, and decisions."></span></div>
+          <div class="lead-line"><span class="ln-no">Action</span><span class="ln-content" data-type="Whether to act, what kind, and which one &mdash; with the evidence."></span></div>
         </div>
-
-        <div class="hero-fig">
-          <canvas class="scrub" data-frames="assets/frames/overview" data-count="80" data-start="14" data-w="1400" data-h="599" aria-label="Figure 1 of the paper, assembled step by step as the page scrolls: sensor signals and individual context enter one sensor-language-action model, which returns multi-level actions, action evidence, and multi-faceted captions."></canvas>
-          <button class="tool scrub-zoom" type="button" data-src="assets/overview.png" data-title="Figure 1. Sensor-Language-Action (SLA) model." aria-label="View the full figure"><i data-lucide="expand" aria-hidden="true"></i></button>
-        </div>
-
-        <div class="hero-lines" id="hero-lines">
-          <div class="hero-line" data-at="0.14"><span class="ln-no">Sensor</span><span>79 modalities, from bedside waveforms to glucose monitors.</span></div>
-          <div class="hero-line" data-at="0.47"><span class="ln-no">Language</span><span>A semantic interface linking signals, context, and decisions.</span></div>
-          <div class="hero-line" data-at="0.84"><span class="ln-no">Action</span><span>Whether to act, what kind, and which one &mdash; with the evidence.</span></div>
-        </div>
-        <p class="hero-hint" aria-hidden="true"><i data-lucide="arrow-down" aria-hidden="true"></i> Scroll to assemble the model</p>
       </div>
     </div>
+
+    <figure class="visual-frame hero-figure" data-zoom>
+      <img src="assets/overview.png" data-animation="assets/overview.gif" width="2160" height="924" alt="Overview of OpenSLA: multimodal sensor signals and individual context from clinical, operating-room, and daily-life settings go into one sensor-language-action model, which returns multi-level actions, action evidence, and multi-faceted captions." fetchpriority="high">
+      <div class="frame-tools">
+        <button class="tool anim-toggle" type="button" hidden aria-label="Pause animation"><i data-lucide="pause" aria-hidden="true"></i></button>
+        <button class="tool zoom-btn" type="button" aria-label="Enlarge figure"><i data-lucide="expand" aria-hidden="true"></i></button>
+      </div>
+      <figcaption>One model over sensor observations, individual context, and actions &mdash; evaluated across three healthcare settings.</figcaption>
+    </figure>
   </div>
 </section>
 
@@ -366,25 +400,26 @@
     <div class="section-head reveal">
       <span class="kicker">How it works</span>
       <h2>From raw recordings to grounded decisions</h2>
-      <p>Keep scrolling: the architecture is drawn in step with the text.</p>
+      <p>A captioning pipeline for supervision, and a model trained jointly to predict actions and generate captions.</p>
     </div>
   </div>
 
-  <div class="scrub-track how-track">
-    <div class="how-sticky">
-      <div class="wrap how-grid">
-        <ol class="how-steps" id="how-steps">
-          <li data-from="0.00"><span class="step-no">01</span><h3>Encode every channel</h3><p>Individual context goes through a text encoder; each sensor channel through a frozen signal encoder, giving a sequence of sensor tokens.</p></li>
-          <li data-from="0.34"><span class="step-no">02</span><h3>Reason in the language model</h3><p>A LoRA-adapted language model reads text and sensor tokens together. Action heads predict necessity, category, and label; a caption decoder, conditioned on the predicted action, writes the explanation.</p></li>
-          <li data-from="0.56"><span class="step-no">03</span><h3>Compress with Hierarchical Memory</h3><p>OpenSLA-H adds learned queries that compress long recordings across resolutions &mdash; 14&times; fewer sensor tokens in clinical windows &mdash; while global queries keep the sample-level picture.</p></li>
-          <li data-from="0.78"><span class="step-no">04</span><h3>The paradigms it is compared with</h3><p>VLA-style action-only training, SensorLM-style contrastive alignment, and a supervised model, all trained on the same data and compute budget.</p></li>
-        </ol>
-        <div class="how-fig">
-          <canvas class="scrub" data-frames="assets/frames/architecture" data-count="64" data-start="0" data-w="1400" data-h="285" aria-label="The OpenSLA architecture drawn step by step: encoders, language model with action heads and caption decoder, Hierarchical Memory, and the compared paradigms."></canvas>
-          <button class="tool scrub-zoom" type="button" data-src="assets/architecture.png" data-title="Figure 3. Modeling paradigms for sensor-action modeling through language." aria-label="View the full figure"><i data-lucide="expand" aria-hidden="true"></i></button>
-        </div>
+  <div class="wrap">
+    <ol class="timeline reveal" id="how-steps">
+      <li class="a-blue"><span class="tl-node">01</span><h3>Encode every channel</h3><p>Individual context goes through a text encoder; each sensor channel through a frozen signal encoder, giving a sequence of sensor tokens.</p></li>
+      <li class="a-green"><span class="tl-node">02</span><h3>Reason in the language model</h3><p>A LoRA-adapted language model reads text and sensor tokens together. Action heads predict necessity, category, and label; a caption decoder, conditioned on the predicted action, writes the explanation.</p></li>
+      <li class="a-purple"><span class="tl-node">03</span><h3>Compress with Hierarchical Memory</h3><p>OpenSLA-H adds learned queries that compress long recordings across resolutions &mdash; 14&times; fewer sensor tokens in clinical windows &mdash; while global queries keep the sample-level picture.</p></li>
+      <li class="a-orange"><span class="tl-node">04</span><h3>The paradigms it is compared with</h3><p>VLA-style action-only training, SensorLM-style contrastive alignment, and a supervised model, all on the same data and compute budget.</p></li>
+    </ol>
+
+    <figure class="visual-frame reveal" data-zoom>
+      <img src="assets/architecture.png" data-animation="assets/architecture.gif" width="2160" height="440" loading="lazy" alt="OpenSLA-B and OpenSLA-H architectures next to VLA-style, SensorLM, and supervised paradigms. OpenSLA-H adds Hierarchical Memory between the sensor encoder and the pretrained language model.">
+      <div class="frame-tools">
+        <button class="tool anim-toggle" type="button" hidden aria-label="Pause animation"><i data-lucide="pause" aria-hidden="true"></i></button>
+        <button class="tool zoom-btn" type="button" aria-label="Enlarge figure"><i data-lucide="expand" aria-hidden="true"></i></button>
       </div>
-    </div>
+      <figcaption>OpenSLA-B and OpenSLA-H beside the paradigms they are compared with (Fig.&nbsp;3).</figcaption>
+    </figure>
   </div>
 
   <div class="wrap">
