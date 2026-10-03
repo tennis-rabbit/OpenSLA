@@ -139,21 +139,21 @@
     <div class="section-head reveal">
       <span class="kicker">The big idea</span>
       <h2>Sensor models stop at perception. Decisions don&rsquo;t.</h2>
-      <p>Sensors matter not only for describing what is happening, but for informing what to do next.</p>
+      <p>Sensing is for deciding what to do next.</p>
     </div>
 
     <div class="accordion reveal">
       <details class="acc-item p-1" open>
         <summary><span class="acc-num">01</span><span class="acc-title">Sensing that stops before acting</span><i data-lucide="plus" class="acc-ico" aria-hidden="true"></i></summary>
-        <div class="acc-body"><p>Today&rsquo;s sensor models recognize states or predict outcomes. The actions that follow are modeled separately, each with its own formulation and a closed label space &mdash; so there is no common way to relate sensor evidence, context, and the decisions they support.</p></div>
+        <div class="acc-body"><p>Sensor models recognize states. The actions live elsewhere, in closed label spaces.</p></div>
       </details>
       <details class="acc-item p-2">
         <summary><span class="acc-num">02</span><span class="acc-title">Language as the interface</span><i data-lucide="plus" class="acc-ico" aria-hidden="true"></i></summary>
-        <div class="acc-body"><p>Unlike fixed labels, language can express task intent, individual context, physiological state, and action semantics together. That lets very different sensor-action problems be written in one common form.</p></div>
+        <div class="acc-body"><p>Language holds intent, context, state, and action at once &mdash; one form for every sensor-action problem.</p></div>
       </details>
       <details class="acc-item p-3">
         <summary><span class="acc-num">03</span><span class="acc-title">One model that predicts, describes, and explains</span><i data-lucide="plus" class="acc-ico" aria-hidden="true"></i></summary>
-        <div class="acc-body"><p>OpenSLA puts Sensor-Language-Action modeling into practice: a single model for hierarchical action prediction, sensor-state understanding, and action explanation, grounded in the underlying sensor evidence.</p></div>
+        <div class="acc-body"><p>OpenSLA: hierarchical action prediction, state understanding, and action explanation, from one model.</p></div>
       </details>
     </div>
 
@@ -231,11 +231,11 @@
     <div class="split split-chart">
       <div class="split-text reveal">
         <h2>Knows when to act &mdash; in every cohort.</h2>
-        <p>OpenSLA has the highest balanced accuracy for action necessity in all six cohorts, and for action category in five.</p>
+        <p>Best action-necessity accuracy in all six cohorts. Best category in five.</p>
         <ul class="check-list">
-          <li><i data-lucide="check" aria-hidden="true"></i><span>Largest gains in clinical and operating-room settings, where the individual&rsquo;s context matters most.</span></li>
+          <li><i data-lucide="check" aria-hidden="true"></i><span>Largest gains where context matters most: clinical care and the operating room.</span></li>
           <li><i data-lucide="check" aria-hidden="true"></i><span>Sensor-only baselines struggle most in the operating room.</span></li>
-          <li><i data-lucide="minus" aria-hidden="true"></i><span>Still hard: insulin category on CGM, where decisions can depend on carbohydrate intake that has not happened yet.</span></li>
+          <li><i data-lucide="minus" aria-hidden="true"></i><span>Still hard: insulin category on CGM &mdash; the carbohydrates haven&rsquo;t happened yet.</span></li>
         </ul>
       </div>
 
@@ -307,7 +307,7 @@
     <div class="split split-fig">
       <div class="split-text reveal">
         <h2>An action it never trained on lands beside its relatives.</h2>
-        <p>Imipenem is absent from the supervised action targets. In OpenSLA&rsquo;s representation space it sits inside the antibiotics cluster &mdash; and with parameters frozen, OpenSLA-H tells it apart from no action at <b>71.4</b> balanced accuracy, against 61.9 for the strongest baseline.</p>
+        <p>Imipenem was never a training target. It lands inside the antibiotics cluster, and a frozen OpenSLA-H detects it at <b>71.4</b> balanced accuracy. The strongest baseline: 61.9.</p>
       </div>
       <div class="split-visual reveal">
         <figure class="visual-frame" data-zoom>
@@ -325,7 +325,7 @@
   <div class="wrap">
     <div class="section-head reveal">
       <h2>Walk between two doses, and the doses in between line up.</h2>
-      <p>Drag &alpha; from one real sample to the other. At each stop, the nearest real sample is retrieved and its insulin dose read off.</p>
+      <p>Drag &alpha; between two real samples. The nearest real sample&rsquo;s dose reads off.</p>
     </div>
 
     <div class="alpha reveal">
@@ -345,7 +345,7 @@
         <input id="alpha-range" class="alpha-range" type="range" min="0" max="1" step="0.01" value="0" aria-label="Interpolation ratio alpha">
         <div class="alpha-stops" aria-hidden="true"><span>0.05&nbsp;U</span><span>1.2&nbsp;U</span><span>7.7&nbsp;U</span><span>14.4&nbsp;U</span></div>
         <p class="alpha-read">Nearest real sample: <b class="alpha-dose">0.05 U</b> <span class="alpha-tag">endpoint</span></p>
-        <p class="viz-note">With the backbone frozen, ridge readouts recover the next two hours of glucose: mean-glucose error 24.0, against 26.5 for the best competing representation &middot; Table&nbsp;14.</p>
+        <p class="viz-note">Frozen backbone, ridge readout: next-two-hour mean glucose error 24.0, best competitor 26.5 &middot; Table&nbsp;14.</p>
       </div>
     </div>
   </div>
@@ -357,33 +357,33 @@
     <div class="section-head reveal">
       <span class="kicker">Also worth knowing</span>
       <h2>Language supervision is a first-order choice</h2>
-      <p>What the ablations and transfer studies say about where the gains come from.</p>
+      <p>What the ablations say.</p>
     </div>
 
     <ul class="blist reveal">
       <li class="bl-item a-purple">
         <button class="bl-head" type="button" aria-expanded="false"><span class="bl-dot"></span><span class="bl-title">Captions beat action-only training</span><i data-lucide="chevron-down" class="bl-ico" aria-hidden="true"></i></button>
-        <div class="bl-body"><div><p>Training on action labels alone, VLA-style, is the weakest variant on every endpoint. On VitalDB, necessity AUROC rises from 54.1 to 74.9 with caption generation and action conditioning.</p></div></div>
+        <div class="bl-body"><div><p>Action-only training is the weakest variant on every endpoint. VitalDB necessity AUROC: 54.1 &rarr; 74.9 with captions and action conditioning.</p></div></div>
       </li>
       <li class="bl-item a-blue">
         <button class="bl-head" type="button" aria-expanded="false"><span class="bl-dot"></span><span class="bl-title">Action captions carry the signal</span><i data-lucide="chevron-down" class="bl-ico" aria-hidden="true"></i></button>
-        <div class="bl-body"><div><p>Adding action-evidence captions to the other three facets lifts necessity AUROC from 81.6 to 83.4 on MOVER and from 64.3 to 74.9 on VitalDB.</p></div></div>
+        <div class="bl-body"><div><p>Add action-evidence captions: necessity AUROC 81.6 &rarr; 83.4 on MOVER, 64.3 &rarr; 74.9 on VitalDB.</p></div></div>
       </li>
       <li class="bl-item a-green">
         <button class="bl-head" type="button" aria-expanded="false"><span class="bl-dot"></span><span class="bl-title">Condition the caption on the predicted action</span><i data-lucide="chevron-down" class="bl-ico" aria-hidden="true"></i></button>
-        <div class="bl-body"><div><p>Dropping action conditioning or the fusion decoder still beats action-only training, but the full model is best on all four operating-room endpoints.</p></div></div>
+        <div class="bl-body"><div><p>Drop action conditioning or the fusion decoder and you still beat action-only. The full model wins all four operating-room endpoints.</p></div></div>
       </li>
       <li class="bl-item a-orange">
         <button class="bl-head" type="button" aria-expanded="false"><span class="bl-dot"></span><span class="bl-title">Adapt the language model directly</span><i data-lucide="chevron-down" class="bl-ico" aria-hidden="true"></i></button>
-        <div class="bl-body"><div><p>Compared with LLaVA-style adapters and Flamingo-style cross-attention, direct LoRA adaptation is best on all four operating-room endpoints. On VitalDB, necessity AUROC is 74.9 with LoRA, 68.9 with cross-attention, and 54.4 with an adapter.</p></div></div>
+        <div class="bl-body"><div><p>Direct LoRA beats Flamingo-style cross-attention and LLaVA-style adapters on all four endpoints. VitalDB necessity AUROC: 74.9 vs 68.9 vs 54.4.</p></div></div>
       </li>
       <li class="bl-item a-purple">
         <button class="bl-head" type="button" aria-expanded="false"><span class="bl-dot"></span><span class="bl-title">Compress long recordings</span><i data-lucide="chevron-down" class="bl-ico" aria-hidden="true"></i></button>
-        <div class="bl-body"><div><p>Hierarchical Memory cuts sensor tokens 14.49&times; in clinical windows and 4.67&times; in the operating room, for 3.4&times; and 1.7&times; faster forward passes. Short CGM sequences see little runtime benefit.</p></div></div>
+        <div class="bl-body"><div><p>Hierarchical Memory: 14.5&times; fewer sensor tokens in clinical windows, 4.7&times; in the operating room; forward passes 3.4&times; and 1.7&times; faster.</p></div></div>
       </li>
       <li class="bl-item a-blue">
         <button class="bl-head" type="button" aria-expanded="false"><span class="bl-dot"></span><span class="bl-title">It carries over to a new hospital cohort</span><i data-lucide="chevron-down" class="bl-ico" aria-hidden="true"></i></button>
-        <div class="bl-body"><div><p>On waveform-linked MIMIC-IV (1,000 windows from 87 individuals), with no further fine-tuning, both OpenSLA variants outperform the adapted sensor-language baselines on necessity and category balanced accuracy &mdash; 74.4 versus 69.3 for necessity.</p></div></div>
+        <div class="bl-body"><div><p>MIMIC-IV, zero fine-tuning: 74.4 vs 69.3 necessity balanced accuracy against the best adapted baseline.</p></div></div>
       </li>
     </ul>
 
@@ -408,7 +408,7 @@
     <div class="section-head reveal">
       <span class="kicker">How it works</span>
       <h2>From raw recordings to grounded decisions</h2>
-      <p>A captioning pipeline for supervision, and a model trained jointly to predict actions and generate captions.</p>
+      <p>Caption for supervision. Train to act and to explain.</p>
     </div>
   </div>
 
@@ -423,10 +423,10 @@
         <figcaption>Fig.&nbsp;3</figcaption>
       </figure>
       <ol class="how-steps">
-        <li class="gs a-blue" data-to="enc"><span class="step-no">01</span><h3>Encode every channel</h3><p>Individual context goes through a text encoder; each sensor channel through a frozen signal encoder, giving a sequence of sensor tokens.</p></li>
-        <li class="gs a-purple" data-to="llm"><span class="step-no">02</span><h3>Reason in the language model</h3><p>A LoRA-adapted language model reads text and sensor tokens together. Action heads predict necessity, category, and label; a caption decoder, conditioned on the predicted action, writes the explanation.</p></li>
-        <li class="gs a-green" data-to="hm"><span class="step-no">03</span><h3>Compress with Hierarchical Memory</h3><p>OpenSLA-H adds learned queries that compress long recordings across resolutions &mdash; 14&times; fewer sensor tokens in clinical windows &mdash; while global queries keep the sample-level picture.</p></li>
-        <li class="gs a-orange" data-to="cmp"><span class="step-no">04</span><h3>The paradigms it is compared with</h3><p>VLA-style action-only training, SensorLM-style contrastive alignment, and a supervised model, all on the same data and compute budget.</p></li>
+        <li class="gs a-blue" data-to="enc"><span class="step-no">01</span><h3>Encode every channel</h3><p>A text encoder for context, a frozen signal encoder per channel.</p></li>
+        <li class="gs a-purple" data-to="llm"><span class="step-no">02</span><h3>Reason in the language model</h3><p>A LoRA-adapted LLM reads both. Action heads predict; an action-conditioned decoder explains.</p></li>
+        <li class="gs a-green" data-to="hm"><span class="step-no">03</span><h3>Compress with Hierarchical Memory</h3><p>Learned queries compress long recordings across resolutions; global queries keep the whole picture.</p></li>
+        <li class="gs a-orange" data-to="cmp"><span class="step-no">04</span><h3>The paradigms it is compared with</h3><p>VLA-style, SensorLM-style, and supervised &mdash; same data, same compute.</p></li>
       </ol>
     </div>
   </div>
@@ -435,7 +435,7 @@
     <div class="sub-head reveal">
       <span class="kicker">The language it learns from</span>
       <h3>Four caption facets, each grounded in the window</h3>
-      <p class="sub-lead">Hover a phrase to see where in the recording &mdash; or in the individual&rsquo;s context &mdash; it comes from.</p>
+      <p class="sub-lead">Hover a phrase. Its source lights up.</p>
     </div>
 
     <div class="ground reveal" data-ground="fig2">
@@ -490,21 +490,21 @@
       <article class="domain a-blue">
         <span class="mc-icon"><i data-lucide="heart-pulse" aria-hidden="true"></i></span>
         <h3>Clinical care</h3>
-        <p>ECG, plethysmography, respiration, blood pressure, SpO&#8322;, and heart rate, with clinical context. Actions span medications, procedures, diagnostic evaluations, and treatment adjustments.</p>
+        <p>Waveforms and vitals with clinical context. Medications, procedures, diagnostics.</p>
         <p class="domain-meta">39 action categories &middot; 106,596 training samples &middot; ~46,000 individuals</p>
         <span class="chips"><span>MC-MED</span><span>MIMIC-III</span><span>MIMIC-IV &middot; external</span></span>
       </article>
       <article class="domain a-green">
         <span class="mc-icon"><i data-lucide="stethoscope" aria-hidden="true"></i></span>
         <h3>Operating room</h3>
-        <p>Dense perioperative waveforms and numerical measurements, aligned with the actions taken during surgery.</p>
+        <p>Perioperative waveforms and measurements, aligned with the actions taken in surgery.</p>
         <p class="domain-meta">17 action categories &middot; 162,665 training samples &middot; ~31,000 surgical cases</p>
         <span class="chips"><span>MOVER</span><span>VitalDB</span></span>
       </article>
       <article class="domain a-orange">
         <span class="mc-icon"><i data-lucide="syringe" aria-hidden="true"></i></span>
         <h3>Metabolic health</h3>
-        <p>Continuous glucose and basal-insulin histories from daily life. The action is insulin bolus delivery.</p>
+        <p>Glucose and basal insulin from daily life. The action is a bolus.</p>
         <p class="domain-meta">4 dose categories &middot; 272,000 training windows, sampled from ~2.6&nbsp;million</p>
         <span class="chips"><span>MetaboNet</span><span>PEDAP</span></span>
       </article>
@@ -523,7 +523,7 @@
   <div class="wrap reveal">
     <span class="kicker">The paper</span>
     <h2>Perceive, reason, and act &mdash; through a common language</h2>
-    <p>Language in sensor intelligence is not only for describing observations. It can organize the knowledge that connects states to actions.</p>
+    <p>Language doesn&rsquo;t just describe observations. It connects states to actions.</p>
     <div class="cta-row center">
       <span class="btn ghost is-soon" aria-disabled="true"><i data-lucide="book-open" aria-hidden="true"></i> Paper <span class="soon">Soon</span></span>
       <span class="btn ghost is-soon" aria-disabled="true"><i data-lucide="code-xml" aria-hidden="true"></i> Code <span class="soon">Soon</span></span>
