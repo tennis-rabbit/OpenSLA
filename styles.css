@@ -200,17 +200,17 @@ h1, h2, h3 { font-family: var(--display); line-height: 1.12; margin: 0; color: v
 .win .card span { font-family: var(--sans); color: var(--text-soft); font-size: .9rem; line-height: 1.5; }
 .win.active .card { opacity: 1; transform: none; pointer-events: auto; }
 
-.hero-head { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 3.5rem; align-items: center; margin-bottom: 2.6rem; }
-.hero-title h1 { font-family: "Manrope", "Inter", sans-serif; font-weight: 800; letter-spacing: -.035em; font-size: clamp(3.4rem, 7.4vw, 6.2rem); line-height: .95; margin: 0 0 .8rem; white-space: nowrap; }
+.hero-head { display: grid; grid-template-columns: minmax(0, 8fr) minmax(0, 4fr); gap: 3.5rem; align-items: center; margin-bottom: 2.6rem; }
+.hero-title h1 { font-family: "Manrope", "Inter", sans-serif; font-weight: 800; letter-spacing: -.035em; font-size: clamp(3.6rem, 8vw, 6.8rem); line-height: .95; margin: 0 0 1rem; white-space: nowrap; }
 .hero-title .open { color: var(--brand-gray); }
-.type-line { font-family: var(--ui); font-size: clamp(1.1rem, 2vw, 1.55rem); font-weight: 500; color: var(--brand-gray); margin: 0; line-height: 1.35; }
+.type-line { font-family: var(--ui); font-size: clamp(1.4rem, 2.6vw, 2.1rem); font-weight: 600; color: var(--brand-gray); margin: 0; line-height: 1.35; }
 .type-line span { color: var(--purple); font-weight: 700; }
-.byline { font-family: var(--sans); font-size: .96rem; color: var(--text-soft); margin: 1rem 0 0; line-height: 1.55; }
+.byline { font-family: var(--sans); font-size: 1.25rem; color: var(--text); margin: 1.1rem 0 0; line-height: 1.5; }
 .byline a { border-bottom: 1px solid var(--line); transition: color .2s, border-color .2s; }
 .byline a:hover { color: var(--purple-d); border-color: var(--purple); }
-.byline .affil { display: block; color: var(--muted); font-size: .86rem; margin-top: .15rem; }
+.byline .affil { display: block; color: var(--muted); font-size: 1.02rem; margin-top: .25rem; }
 .byline sup { font-size: .7em; }
-.hero-cta { margin-top: 1.5rem; }
+.hero-cta { margin-top: 1.8rem; }
 
 .lead-list { color: var(--muted); font-size: .95rem; }
 .lead-line { display: grid; grid-template-columns: 1fr; gap: .2rem; padding: .85rem .2rem .9rem; border-top: 1px solid var(--line); line-height: 1.45; }
