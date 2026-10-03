@@ -341,7 +341,7 @@ a.btn.ghost:hover { transform: translateY(-2px); border-color: var(--purple); co
 .chat-ring-dot { position: absolute; left: 50%; top: 50%; width: 58px; height: 58px; transform: translate(-50%, -50%); border-radius: 50%; background: var(--grad); color: #fff; display: inline-flex; align-items: center; justify-content: center; box-shadow: var(--shadow-glow); transition: transform .25s var(--spring); }
 .chat-ring-dot svg { width: 26px; height: 26px; }
 .chat-ring:hover .chat-ring-dot { transform: translate(-50%, -50%) scale(1.12); }
-.chat-invite-text { margin: 0; max-width: 34ch; font-family: var(--serif); font-weight: 600; font-size: clamp(1.15rem, 1.7vw, 1.45rem); line-height: 1.35; letter-spacing: -.01em; color: var(--text); }
+.chat-invite-text { margin: 0; max-width: 40ch; font-family: var(--serif); font-weight: 600; font-size: clamp(1.15rem, 1.7vw, 1.45rem); line-height: 1.35; letter-spacing: -.01em; color: var(--text); }
 .chat-start { display: inline-flex; align-items: center; gap: .5rem; margin-top: .4rem; cursor: pointer; font-family: var(--ui); font-weight: 700; font-size: 1rem; color: #fff; background: var(--grad); border: 0; border-radius: 999px; padding: .75rem 1.4rem; box-shadow: var(--shadow-glow); transition: transform .25s var(--spring), box-shadow .25s ease; }
 .chat-start svg { width: 18px; height: 18px; transition: transform .25s ease; }
 .chat-start:hover { transform: translateY(-2px); box-shadow: 0 18px 40px -14px rgba(102,76,188,.6); }
