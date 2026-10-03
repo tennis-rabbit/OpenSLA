@@ -142,20 +142,23 @@ h1, h2, h3 { font-family: var(--display); line-height: 1.12; margin: 0; color: v
 
 /* the invitation: a ring at t0 under the fog, and a note beside it */
 .stage.fog { cursor: pointer; }
-.invite { position: absolute; left: calc(var(--x) * 100%); top: 50%; width: 72px; height: 72px; transform: translate(-50%, -50%); background: none; border: 0; padding: 0; cursor: pointer; z-index: 6; opacity: 0; pointer-events: none; transition: opacity .4s ease, transform .4s ease; }
+.invite { position: absolute; left: calc(var(--x) * 100%); top: 50%; width: 104px; height: 104px; transform: translate(-50%, -50%); background: none; border: 0; padding: 0; cursor: pointer; z-index: 6; opacity: 0; pointer-events: none; transition: opacity .4s ease, transform .4s ease; }
 .stage.fog .invite { opacity: 1; pointer-events: auto; }
 .invite-ring { position: absolute; inset: 0; border-radius: 50%; border: 2px solid rgba(102,76,188,.55); animation: invite-ping 2.4s ease-out infinite; }
 .invite-ring.d2 { animation-delay: 1.2s; }
 @keyframes invite-ping { 0% { transform: scale(.55); opacity: .9; } 100% { transform: scale(1.35); opacity: 0; } }
-.invite-dot { position: absolute; left: 50%; top: 50%; width: 40px; height: 40px; transform: translate(-50%, -50%); border-radius: 50%; background: var(--grad); color: #fff; display: inline-flex; align-items: center; justify-content: center; box-shadow: var(--shadow-glow); transition: transform .25s var(--spring); }
-.invite-dot svg { width: 18px; height: 18px; }
+.invite-dot { position: absolute; left: 50%; top: 50%; width: 58px; height: 58px; transform: translate(-50%, -50%); border-radius: 50%; background: var(--grad); color: #fff; display: inline-flex; align-items: center; justify-content: center; box-shadow: var(--shadow-glow); transition: transform .25s var(--spring); }
+.invite-dot svg { width: 26px; height: 26px; }
 .invite:hover .invite-dot { transform: translate(-50%, -50%) scale(1.12); }
-.invite-box { position: absolute; left: calc(var(--x) * 100% - 58px); top: 50%; transform: translate(-100%, -50%); width: min(300px, 40cqw); z-index: 6; pointer-events: none;
-  background: rgba(255,255,255,.96); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: .8rem 1rem .85rem; opacity: 0; transition: opacity .4s ease, transform .4s ease; }
+.invite-box { position: absolute; left: calc(var(--x) * 100% - 76px); top: 50%; transform: translate(-100%, -50%); width: min(470px, 46cqw); z-index: 6; cursor: pointer;
+  background: rgba(255,255,255,.97); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); padding: 1.15rem 1.4rem 1.2rem; opacity: 0; transition: opacity .4s ease, transform .3s ease, box-shadow .3s ease; }
+.invite-box:hover { transform: translate(-100%, -50%) translateY(-3px); box-shadow: 0 30px 60px -30px rgba(45,30,95,.45); }
 .invite-box::after { content: ""; position: absolute; right: -7px; top: 50%; width: 12px; height: 12px; transform: translateY(-50%) rotate(45deg); background: #fff; border-top: 1px solid var(--line); border-right: 1px solid var(--line); }
 .stage.fog .invite-box { opacity: 1; }
-.invite-box b { display: block; font-family: var(--serif); font-weight: 600; font-size: 1.05rem; line-height: 1.3; color: var(--text); margin-bottom: .3rem; }
-.invite-box span { font-family: var(--ui); font-size: .72rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--purple-d); }
+.invite-box b { display: block; font-family: var(--serif); font-weight: 600; font-size: clamp(1.25rem, 1.9vw, 1.6rem); line-height: 1.3; letter-spacing: -.01em; color: var(--text); margin-bottom: .55rem; }
+.invite-box span { display: inline-flex; align-items: center; gap: .45rem; font-family: var(--ui); font-size: .82rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--purple-d); }
+.invite-box span i { font-style: normal; font-size: 1.15em; transition: transform .25s ease; }
+.invite-box:hover span i { transform: translateX(4px); }
 
 /* the language probe: a question typed at t0 that touches the strip */
 .probe { position: absolute; left: calc(var(--x) * 100%); top: 50%; transform: translate(-50%, -50%); display: inline-flex; align-items: center; white-space: nowrap; pointer-events: none; z-index: 5;
@@ -558,11 +561,13 @@ a.btn.ghost:hover { transform: translateY(-2px); border-color: var(--purple); co
   .channels { width: 48px; }
   .ch { left: 8px; }
   .probe { font-size: .95rem; padding: .35rem .8rem; }
-  .invite { width: 56px; height: 56px; }
-  .invite-dot { width: 32px; height: 32px; }
-  .invite-box { left: 50%; top: 10px; transform: translateX(-50%); width: calc(100cqw - 24px); padding: .55rem .75rem; }
+  .invite { width: 64px; height: 64px; }
+  .invite-dot { width: 38px; height: 38px; }
+  .invite-dot svg { width: 18px; height: 18px; }
+  .invite-box, .invite-box:hover { left: 50%; top: 10px; transform: translateX(-50%); width: calc(100cqw - 24px); padding: .65rem .85rem; }
   .invite-box::after { display: none; }
-  .invite-box b { font-size: .9rem; }
+  .invite-box b { font-size: 1rem; }
+  .invite-box span { font-size: .72rem; }
   .win .card, .win.ar .card { left: calc(var(--mx) * -1px + 8px); right: auto; width: calc(100cqw - 16px); }
   .how-steps { grid-template-columns: 1fr; }
   .hero-title h1 { white-space: normal; }
