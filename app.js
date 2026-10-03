@@ -432,6 +432,8 @@
     }
     function ask(id) {
       if (asked[id] || busy) return;
+      var invite = $(".chat-invite", log); if (invite) invite.remove();
+      chat.classList.remove("idle");
       clearTimeout(timer); asked[id] = true; setBusy(true);
       var chip = chips.filter(function (c) { return c.getAttribute("data-turn") === id; })[0];
       chip.classList.add("done"); chip.disabled = true;
@@ -452,12 +454,8 @@
     }
     chips.forEach(function (c) { c.addEventListener("click", function () { ask(c.getAttribute("data-turn")); }); });
     replay.addEventListener("click", function () { reset(); ask("state"); });
-    if ("IntersectionObserver" in window && !reduceMotion.matches) {
-      var seen = new IntersectionObserver(function (entries) {
-        if (entries.some(function (en) { return en.isIntersecting; })) { seen.disconnect(); ask("state"); }
-      }, { threshold: 0.6 });
-      seen.observe(chat);
-    } else { ask("state"); }
+    chat.classList.add("idle");
+    $$(".chat-ring, .chat-start", chat).forEach(function (b) { b.addEventListener("click", function () { ask("state"); }); });
   })();
 
   /* ---------- Grounding: hover a caption phrase, the region it comes from lights up ----------

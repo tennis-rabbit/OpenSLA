@@ -336,6 +336,18 @@ a.btn.ghost:hover { transform: translateY(-2px); border-color: var(--purple); co
 .evidence b { color: var(--purple-d); }
 .caret { display: inline-block; width: 2px; height: 1.05em; margin-left: 2px; background: var(--purple); vertical-align: -0.18em; animation: blink 1s steps(1) infinite; }
 @keyframes blink { 50% { opacity: 0; } }
+.chat-invite { margin: auto; display: flex; flex-direction: column; align-items: center; text-align: center; gap: .6rem; padding: 2rem 1rem; animation: msgIn .4s ease; }
+.chat-ring { position: relative; width: 104px; height: 104px; background: none; border: 0; padding: 0; cursor: pointer; margin-bottom: .4rem; }
+.chat-ring-dot { position: absolute; left: 50%; top: 50%; width: 58px; height: 58px; transform: translate(-50%, -50%); border-radius: 50%; background: var(--grad); color: #fff; display: inline-flex; align-items: center; justify-content: center; box-shadow: var(--shadow-glow); transition: transform .25s var(--spring); }
+.chat-ring-dot svg { width: 26px; height: 26px; }
+.chat-ring:hover .chat-ring-dot { transform: translate(-50%, -50%) scale(1.12); }
+.chat-invite-text { margin: 0; max-width: 34ch; font-family: var(--serif); font-weight: 600; font-size: clamp(1.15rem, 1.7vw, 1.45rem); line-height: 1.35; letter-spacing: -.01em; color: var(--text); }
+.chat-start { display: inline-flex; align-items: center; gap: .5rem; margin-top: .4rem; cursor: pointer; font-family: var(--ui); font-weight: 700; font-size: 1rem; color: #fff; background: var(--grad); border: 0; border-radius: 999px; padding: .75rem 1.4rem; box-shadow: var(--shadow-glow); transition: transform .25s var(--spring), box-shadow .25s ease; }
+.chat-start svg { width: 18px; height: 18px; transition: transform .25s ease; }
+.chat-start:hover { transform: translateY(-2px); box-shadow: 0 18px 40px -14px rgba(102,76,188,.6); }
+.chat-start:hover svg { transform: translateX(4px); }
+.chat-start:active { transform: scale(.96); transition-duration: .08s; }
+.chat.idle .chip { opacity: .55; }
 .chat-bar { display: flex; align-items: center; gap: .6rem; padding: .7rem .9rem; border-top: 1px solid var(--line); background: var(--surface); }
 .chips { display: flex; flex-wrap: wrap; gap: .45rem; flex: 1; }
 .chip { display: inline-flex; align-items: center; gap: .4rem; cursor: pointer; font-family: var(--ui); font-weight: 600; font-size: .86rem; color: var(--purple-d); background: rgba(102,76,188,.07); border: 1px solid rgba(102,76,188,.25); border-radius: 999px; padding: .42rem .9rem; transition: background .2s, color .2s, border-color .2s, transform .2s var(--spring), opacity .2s; }
