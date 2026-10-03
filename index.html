@@ -292,7 +292,7 @@
     <div class="split split-fig">
       <div class="split-text reveal">
         <h2>An action it never trained on lands beside its relatives.</h2>
-        <p>Imipenem was never a training target. It lands inside the antibiotics cluster, and a frozen OpenSLA-H detects it at <b>71.4</b> balanced accuracy. The strongest baseline: 61.9.</p>
+        <p>Imipenem was never a training target, yet it lands among the antibiotics &mdash; and a frozen OpenSLA-H detects it at <b>71.4</b> balanced accuracy, against 61.9 for the strongest baseline.</p>
       </div>
       <div class="split-visual reveal">
         <figure class="visual-frame" data-zoom>
@@ -309,7 +309,8 @@
 <section class="section" id="structure">
   <div class="wrap">
     <div class="section-head reveal">
-      <h2>Actions form a continuous space. Interpolate between two embeddings, and the actions in between fall into place.</h2>
+      <h2>Actions form a continuous space.</h2>
+      <p>Interpolate between two embeddings, and the actions in between fall into place.</p>
     </div>
 
     <div class="alpha reveal">
@@ -344,8 +345,8 @@
     </div>
 
     <ul class="blist reveal">
-      <li class="bl-item a-purple">
-        <button class="bl-head" type="button" aria-expanded="false"><span class="bl-dot"></span><span class="bl-title">Do captions beat action-only training?</span><i data-lucide="chevron-down" class="bl-ico" aria-hidden="true"></i></button>
+      <li class="bl-item a-purple open">
+        <button class="bl-head" type="button" aria-expanded="true"><span class="bl-dot"></span><span class="bl-title">Do captions beat action-only training?</span><i data-lucide="chevron-down" class="bl-ico" aria-hidden="true"></i></button>
         <div class="bl-body"><div><p>Action-only training is the weakest variant on every endpoint. VitalDB necessity AUROC: 54.1 &rarr; 74.9 with captions and action conditioning.</p></div></div>
       </li>
       <li class="bl-item a-blue">
