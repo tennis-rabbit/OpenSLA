@@ -128,7 +128,10 @@
       future:   { lane: 3, x: T0 + 0.015, w: 1 - T0 - 0.015, future: true }
     };
     var w = 0, h = 0, active = null, spot = null;
-    var reveal = { phase: "idle", r: 0 };                       // idle → typing → bloom → done
+    var reveal = { phase: "fog", r: 0 };                        // fog → typing → bloom → done
+    var invite = $(".invite", stage);
+    var FOG = [];                                               // drifting patches of fog over the strip
+    for (var fi = 0; fi < 9; fi++) FOG.push({ x: Math.random(), y: Math.random(), r: 0.18 + Math.random() * 0.22, s: 0.004 + Math.random() * 0.006, p: Math.random() * 6.28 });
 
     function geom(m) {
       var L = LANES[m.lane], span = w - LEFT - RIGHT, cy = L.y * h;
@@ -146,7 +149,7 @@
       });
       chans.forEach(function (el, i) { el.style.setProperty("--y", LANES[i].y); });
       var tx = (LEFT + T0 * (w - LEFT - RIGHT)) / w;
-      t0el.style.setProperty("--x", tx); probe.style.setProperty("--x", tx);
+      stage.style.setProperty("--x", tx);            // t0 marker, probe, invitation all hang off it
     }
 
     function roundRect(x, y, rw, rh, r) {
@@ -186,7 +189,24 @@
       roundRect(0.5, 0.5, w - 1, h - 1, 14); ctx.strokeStyle = "rgba(102,76,188,.14)"; ctx.lineWidth = 1; ctx.stroke();
     }
     function drawRaw(t) {                                        // before language touches it: the signal is there, barely legible
-      LANES.forEach(function (L) { trace(L, t * L.speed, LEFT, w - RIGHT, 0.1, 1.2); });
+      LANES.forEach(function (L) { trace(L, t * L.speed, LEFT, w - RIGHT, 0.16, 1.2); });
+    }
+    function drawFog(t, hole) {                                  // a veil over the paper, with a clear circle once the question lands
+      ctx.save(); roundRect(0.5, 0.5, w - 1, h - 1, 14); ctx.clip();
+      if (hole > 0) { ctx.beginPath(); ctx.rect(0, 0, w, h); ctx.arc(w * 0 + hole.x, hole.y, hole.r, 0, 6.2832, true); ctx.clip("evenodd"); }
+      ctx.globalAlpha = 1; ctx.fillStyle = "rgba(247,245,252,.78)"; ctx.fillRect(0, 0, w, h);
+      FOG.forEach(function (f) {
+        var cx = ((f.x + Math.sin(t * f.s * 6 + f.p) * 0.06) % 1) * w, cy = ((f.y + Math.cos(t * f.s * 5 + f.p) * 0.05) % 1) * h, r = f.r * w;
+        var g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+        g.addColorStop(0, "rgba(255,255,255,.75)"); g.addColorStop(0.6, "rgba(244,240,250,.35)"); g.addColorStop(1, "rgba(244,240,250,0)");
+        ctx.fillStyle = g; ctx.fillRect(cx - r, cy - r, 2 * r, 2 * r);
+      });
+      ctx.restore();
+      if (hole > 0) {                                             // a soft, bright rim where the fog parts
+        var rim = ctx.createRadialGradient(hole.x, hole.y, Math.max(0, hole.r - 26), hole.x, hole.y, hole.r + 2);
+        rim.addColorStop(0, "rgba(255,255,255,0)"); rim.addColorStop(1, "rgba(255,255,255,.9)");
+        ctx.save(); roundRect(0.5, 0.5, w - 1, h - 1, 14); ctx.clip(); ctx.fillStyle = rim; ctx.beginPath(); ctx.arc(hole.x, hole.y, hole.r + 2, 0, 6.2832); ctx.fill(); ctx.restore();
+      }
     }
     function drawLive(t) {
       var span = w - LEFT - RIGHT, x0 = LEFT, xt = LEFT + T0 * span, x1 = w - RIGHT, dimOthers = !!active;
@@ -237,9 +257,10 @@
       drawPaper();
       if (reveal.phase === "done") { drawLive(t); return; }
       drawRaw(t);
-      if (reveal.phase !== "bloom") return;
       var cx = LEFT + T0 * (w - LEFT - RIGHT), cy = h / 2;
+      if (reveal.phase !== "bloom") { drawFog(t, 0); return; }
       ctx.save(); ctx.beginPath(); ctx.arc(cx, cy, reveal.r, 0, 6.2832); ctx.clip(); drawLive(t); ctx.restore();
+      drawFog(t, { x: cx, y: cy, r: reveal.r });
       ctx.globalAlpha = Math.max(0, 0.7 - reveal.r / (w * 0.9)); ctx.strokeStyle = "#664cbc"; ctx.lineWidth = 1.5;
       ctx.beginPath(); ctx.arc(cx, cy, reveal.r, 0, 6.2832); ctx.stroke(); ctx.globalAlpha = 1;
       marks.forEach(function (el) {                               // windows pop in as the bloom reaches them
@@ -268,14 +289,20 @@
     var bloomStart = 0, typeTimer = 0;
     function finish() {
       reveal.phase = "done"; marks.forEach(function (el) { el.classList.add("in"); });
-      stage.classList.add("revealed"); probe.classList.remove("on", "touch"); probe.classList.add("docked");
+      stage.classList.add("revealed"); stage.classList.remove("fog"); probe.classList.remove("on", "touch"); probe.classList.add("docked");
+    }
+    function fog() {                                             // back under the veil, with the invitation
+      clearTimeout(typeTimer);
+      reveal.phase = "fog"; reveal.r = 0; bloomStart = 0; select(null);
+      marks.forEach(function (el) { el.classList.remove("in"); });
+      stage.classList.remove("revealed"); stage.classList.add("fog"); probe.classList.remove("on", "touch", "docked");
     }
     function play() {
       clearTimeout(typeTimer);
       if (reduceMotion.matches) { finish(); draw(0); return; }
       reveal.phase = "typing"; reveal.r = 0; bloomStart = 0;
       marks.forEach(function (el) { el.classList.remove("in"); });
-      stage.classList.remove("revealed"); probe.classList.remove("docked", "touch"); probe.classList.add("on");
+      stage.classList.remove("revealed", "fog"); probe.classList.remove("docked", "touch"); probe.classList.add("on");
       probeText.textContent = "";
       var ci = 0;
       (function tick() {
@@ -294,7 +321,7 @@
       draw(ms / 1000); readouts(ms / 1000);
       if (!reduceMotion.matches) requestAnimationFrame(frame);
     }
-    function start() { layout(); if (reduceMotion.matches) { finish(); draw(0); readouts(1); } else { requestAnimationFrame(frame); setTimeout(play, 700); } }
+    function start() { layout(); if (reduceMotion.matches) { finish(); draw(0); readouts(1); } else { stage.classList.add("fog"); requestAnimationFrame(frame); } }
     window.addEventListener("resize", function () { layout(); if (reduceMotion.matches) draw(0); }, { passive: true });
     reduceMotion.addEventListener("change", start);
     start();
@@ -311,7 +338,9 @@
       el.addEventListener("blur", function () { select(null); });
       el.addEventListener("click", function (e) { e.stopPropagation(); select(el); });
     });
-    t0el.addEventListener("click", function (e) { e.stopPropagation(); if (reveal.phase === "done") play(); });
+    t0el.addEventListener("click", function (e) { e.stopPropagation(); if (reveal.phase === "done") fog(); });
+    stage.addEventListener("click", function (e) { if (reveal.phase === "fog") { e.stopPropagation(); play(); } });
+    invite.addEventListener("keydown", function (e) { if ((e.key === "Enter" || e.key === " ") && reveal.phase === "fog") { e.preventDefault(); play(); } });
     stage.addEventListener("pointermove", function (e) { var r = stage.getBoundingClientRect(); spot = { x: e.clientX - r.left, y: e.clientY - r.top }; });
     stage.addEventListener("pointerleave", function () { spot = null; select(null); });
     document.addEventListener("click", function () { select(null); });
