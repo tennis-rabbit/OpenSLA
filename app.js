@@ -103,74 +103,217 @@
     cgm:  function (x) { return 0.7 * Math.sin(x / 230) + 0.3 * Math.sin(x / 90 + 0.6); }
   };
 
-  /* ---------- Hero stage: scrolling sensor traces with capability markers ---------- */
+  /* ---------- Hero stage: a monitor strip. Four channels scroll past a decision time t0. A typed question
+     touches the strip at t0 and the signal blooms open around it; each capability is an analysis window
+     drawn on the trace it reads from. ---------- */
   (function () {
     var stage = $(".stage");
     if (!stage) return;
-    var canvas = $(".traces", stage);
-    var ctx = canvas.getContext("2d");
-    var stars = $$(".star", stage);
-    var TRACES = [
-      { y: 0.18, color: "#3f7fc4", amp: 0.20, speed: 34, fn: function (x) { return wave.ecg(x, 128) - 0.3; } },
-      { y: 0.40, color: "#4f9d69", amp: 0.075, speed: 20, fn: function (x) { return wave.resp(x, 150); } },
-      { y: 0.62, color: "#d9577a", amp: 0.06, speed: 12, fn: wave.hr, beads: 30 },
-      { y: 0.84, color: "#dd8a2f", amp: 0.07, speed: 8, fn: wave.cgm, beads: 16, beadsOnly: true }
+    var canvas = $(".traces", stage), ctx = canvas.getContext("2d");
+    var marks = $$(".win", stage), chans = $$(".ch", stage), t0el = $(".t0", stage);
+    var probe = $(".probe", stage), probeText = $(".probe-text", probe), QUESTION = "What action follows?";
+    var LEFT = 86, RIGHT = 14, T0 = 0.68;                       // channel column, right inset, decision time (fraction of the trace span)
+    var LANES = [
+      { key: "ecg",  y: 0.21,  color: "#3f7fc4", amp: 0.19,  speed: 34, up: 0.19, dn: 0.08, fn: function (x) { return wave.ecg(x, 128) - 0.3; } },
+      { key: "resp", y: 0.43,  color: "#4f9d69", amp: 0.075, speed: 20, up: 0.1,  dn: 0.1,  fn: function (x) { return wave.resp(x, 150); } },
+      { key: "hr",   y: 0.645, color: "#d9577a", amp: 0.06,  speed: 12, up: 0.09, dn: 0.09, fn: wave.hr, beads: 30 },
+      { key: "cgm",  y: 0.855, color: "#dd8a2f", amp: 0.07,  speed: 8,  up: 0.1,  dn: 0.1,  fn: wave.cgm, beads: 16, beadsOnly: true }
     ];
-    var w = 0, h = 0;
+    var MARKS = {                                               // x and w are fractions of the trace span
+      actions:  { lane: 0, x: 0.05, w: 0.19 },
+      unseen:   { lane: 0, x: 0.47, w: 0.14, dashed: true },
+      state:    { lane: 1, x: 0.30, w: 0.17 },
+      evidence: { lane: 2, x: 0.11, w: 0.18 },
+      cohort:   { lane: 2, x: 0.49, w: 0.15, ghost: true },
+      future:   { lane: 3, x: T0 + 0.015, w: 1 - T0 - 0.015, future: true }
+    };
+    var w = 0, h = 0, active = null, spot = null;
+    var reveal = { phase: "idle", r: 0 };                       // idle → typing → bloom → done
 
-    function resize() {
+    function geom(m) {
+      var L = LANES[m.lane], span = w - LEFT - RIGHT, cy = L.y * h;
+      return { x: LEFT + m.x * span, y: cy - L.up * h, w: m.w * span, h: (L.up + L.dn) * h, cy: cy, lane: L };
+    }
+    function layout() {
       var dpr = window.devicePixelRatio || 1;
       w = stage.clientWidth; h = stage.clientHeight;
       canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      marks.forEach(function (el) {
+        var m = MARKS[el.getAttribute("data-mark")], g = geom(m);
+        el.style.left = g.x + "px"; el.style.top = g.y + "px"; el.style.width = g.w + "px"; el.style.height = g.h + "px";
+        el.style.setProperty("--mc", g.lane.color); el.style.setProperty("--mcl", g.lane.color + "55"); el.style.setProperty("--mx", g.x);
+      });
+      chans.forEach(function (el, i) { el.style.setProperty("--y", LANES[i].y); });
+      var tx = (LEFT + T0 * (w - LEFT - RIGHT)) / w;
+      t0el.style.setProperty("--x", tx); probe.style.setProperty("--x", tx);
     }
 
-    function draw(t) {
-      ctx.clearRect(0, 0, w, h);
-      var dim = stage.classList.contains("has-active");
-      TRACES.forEach(function (tr) {
-        var off = t * tr.speed, cy = tr.y * h, a = tr.amp * h, x;
-        ctx.globalAlpha = dim ? 0.28 : 0.62;
-        ctx.strokeStyle = tr.color; ctx.fillStyle = tr.color;
-        ctx.lineWidth = 1.6; ctx.lineJoin = "round"; ctx.lineCap = "round";
-        if (!tr.beadsOnly) {
-          ctx.beginPath();
-          for (x = 0; x <= w; x += 2) {
-            var y = cy - a * tr.fn(x + off);
-            if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-          }
-          ctx.stroke();
+    function roundRect(x, y, rw, rh, r) {
+      ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + rw, y, x + rw, y + rh, r); ctx.arcTo(x + rw, y + rh, x, y + rh, r);
+      ctx.arcTo(x, y + rh, x, y, r); ctx.arcTo(x, y, x + rw, y, r); ctx.closePath();
+    }
+    function trace(L, off, x0, x1, alpha, width, dash, fn, color) {
+      var cy = L.y * h, a = L.amp * h, x, f = fn || L.fn;
+      ctx.globalAlpha = alpha; ctx.strokeStyle = color || L.color; ctx.fillStyle = color || L.color;
+      ctx.lineWidth = width; ctx.lineJoin = "round"; ctx.lineCap = "round"; ctx.setLineDash(dash || []);
+      if (!L.beadsOnly) {
+        ctx.beginPath();
+        for (x = x0; x <= x1; x += 2) { var y = cy - a * f(x + off); if (x === x0) ctx.moveTo(x, y); else ctx.lineTo(x, y); }
+        ctx.stroke();
+      }
+      ctx.setLineDash([]);
+      if (L.beads && !dash) {
+        var start = x0 + ((-(off % L.beads)) % L.beads + L.beads) % L.beads;
+        for (x = start; x <= x1; x += L.beads) { ctx.beginPath(); ctx.arc(x, cy - a * f(x + off), L.beadsOnly ? 2.3 : 2.6, 0, 6.2832); ctx.fill(); }
+      }
+    }
+
+    function drawPaper() {                                       // a sheet of recording paper
+      roundRect(0.5, 0.5, w - 1, h - 1, 14);
+      ctx.fillStyle = "rgba(255,255,255,.62)"; ctx.fill();
+      ctx.save(); ctx.clip();
+      ctx.strokeStyle = "rgba(102,76,188,.07)"; ctx.lineWidth = 1;
+      for (var gx = LEFT; gx < w; gx += 12) { ctx.globalAlpha = ((gx - LEFT) % 60 === 0) ? 1 : 0.45; ctx.beginPath(); ctx.moveTo(gx + 0.5, 0); ctx.lineTo(gx + 0.5, h); ctx.stroke(); }
+      for (var gy = 0; gy < h; gy += 12) { ctx.globalAlpha = (gy % 60 === 0) ? 1 : 0.45; ctx.beginPath(); ctx.moveTo(LEFT, gy + 0.5); ctx.lineTo(w, gy + 0.5); ctx.stroke(); }
+      ctx.globalAlpha = 1;
+      if (spot) {                                                 // a soft light under the reader's pointer
+        var g = ctx.createRadialGradient(spot.x, spot.y, 0, spot.x, spot.y, 110);
+        g.addColorStop(0, "rgba(255,255,255,.8)"); g.addColorStop(1, "rgba(255,255,255,0)");
+        ctx.fillStyle = g; ctx.fillRect(spot.x - 110, spot.y - 110, 220, 220);
+      }
+      ctx.restore();
+      roundRect(0.5, 0.5, w - 1, h - 1, 14); ctx.strokeStyle = "rgba(102,76,188,.14)"; ctx.lineWidth = 1; ctx.stroke();
+    }
+    function drawRaw(t) {                                        // before language touches it: the signal is there, barely legible
+      LANES.forEach(function (L) { trace(L, t * L.speed, LEFT, w - RIGHT, 0.1, 1.2); });
+    }
+    function drawLive(t) {
+      var span = w - LEFT - RIGHT, x0 = LEFT, xt = LEFT + T0 * span, x1 = w - RIGHT, dimOthers = !!active;
+      ctx.save(); roundRect(0.5, 0.5, w - 1, h - 1, 14); ctx.clip();
+      ctx.fillStyle = "rgba(102,76,188,.035)"; ctx.fillRect(xt, 0, x1 - xt + RIGHT, h);     // the future, right of t0
+      ctx.restore();
+      marks.forEach(function (el) {                               // analysis windows
+        var m = MARKS[el.getAttribute("data-mark")], g = geom(m), on = el === active;
+        ctx.globalAlpha = on ? 0.14 : dimOthers ? 0.04 : 0.075; ctx.fillStyle = g.lane.color;
+        roundRect(g.x, g.y, g.w, g.h, 8); ctx.fill();
+        if (m.dashed || on) { ctx.globalAlpha = on ? 0.9 : 0.5; ctx.strokeStyle = g.lane.color; ctx.lineWidth = on ? 1.5 : 1; ctx.setLineDash(m.dashed && !on ? [5, 4] : []); ctx.stroke(); ctx.setLineDash([]); }
+      });
+      LANES.forEach(function (L) {                                // the traces: observed up to t0, dashed beyond
+        var off = t * L.speed, base = dimOthers ? 0.22 : 0.42;
+        trace(L, off, x0, xt, base, 1.5);
+        if (spot && !dimOthers) {                                  // legible where the pointer is
+          ctx.save(); ctx.beginPath(); ctx.arc(spot.x, spot.y, 80, 0, 6.2832); ctx.clip();
+          trace(L, off, Math.max(x0, spot.x - 84), Math.min(xt, spot.x + 84), 0.95, 2); ctx.restore();
         }
-        if (tr.beads) {
-          for (x = -(off % tr.beads); x <= w; x += tr.beads) {
-            ctx.beginPath();
-            ctx.arc(x, cy - a * tr.fn(x + off), tr.beadsOnly ? 2.4 : 2.8, 0, Math.PI * 2);
-            ctx.fill();
-          }
+        if (L.beadsOnly) {                                         // CGM: the model reads out the next two hours
+          var cy = L.y * h, a = L.amp * h, x, pts = [];
+          for (x = xt; x <= x1; x += 4) pts.push([x, cy - a * L.fn(x + off), 2 + 12 * (x - xt) / (x1 - xt)]);
+          ctx.globalAlpha = dimOthers ? 0.08 : 0.14; ctx.fillStyle = L.color; ctx.beginPath();
+          pts.forEach(function (p, k) { if (k === 0) ctx.moveTo(p[0], p[1] - p[2]); else ctx.lineTo(p[0], p[1] - p[2]); });
+          for (var k = pts.length - 1; k >= 0; k--) ctx.lineTo(pts[k][0], pts[k][1] + pts[k][2]);
+          ctx.closePath(); ctx.fill();
+          ctx.globalAlpha = dimOthers ? 0.3 : 0.6; ctx.strokeStyle = L.color; ctx.lineWidth = 1.5; ctx.setLineDash([4, 5]);
+          ctx.beginPath(); pts.forEach(function (p, k) { if (k === 0) ctx.moveTo(p[0], p[1]); else ctx.lineTo(p[0], p[1]); }); ctx.stroke(); ctx.setLineDash([]);
+        } else {
+          trace(L, off, xt, x1, 0.14, 1.2, [3, 6]);
         }
       });
+      marks.forEach(function (el) {                               // the window's own segment, bright
+        var m = MARKS[el.getAttribute("data-mark")], g = geom(m), on = el === active, L = g.lane, off = t * L.speed;
+        if (m.future) return;
+        ctx.save(); roundRect(g.x, g.y, g.w, g.h, 8); ctx.clip();
+        trace(L, off, g.x - 4, g.x + g.w + 4, on || !dimOthers ? 1 : 0.5, on ? 2.6 : 2.1);
+        if (m.ghost) trace(L, off, g.x - 4, g.x + g.w + 4, on ? 0.7 : 0.45, 1.6, [6, 4], function (x) { return 0.85 * wave.hr(x + 420) - 0.15; }, "#6b6477");
+        ctx.restore();
+      });
+      ctx.globalAlpha = 1; ctx.strokeStyle = "rgba(79,56,160,.5)"; ctx.lineWidth = 1; ctx.setLineDash([2, 4]);   // decision time
+      ctx.beginPath(); ctx.moveTo(xt + 0.5, 48); ctx.lineTo(xt + 0.5, h - 6); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle = "#4f38a0"; ctx.beginPath(); ctx.moveTo(xt - 4, 41); ctx.lineTo(xt + 4, 41); ctx.lineTo(xt, 47); ctx.closePath(); ctx.fill();
       ctx.globalAlpha = 1;
     }
+    function draw(t) {
+      ctx.clearRect(0, 0, w, h);
+      drawPaper();
+      if (reveal.phase === "done") { drawLive(t); return; }
+      drawRaw(t);
+      if (reveal.phase !== "bloom") return;
+      var cx = LEFT + T0 * (w - LEFT - RIGHT), cy = h / 2;
+      ctx.save(); ctx.beginPath(); ctx.arc(cx, cy, reveal.r, 0, 6.2832); ctx.clip(); drawLive(t); ctx.restore();
+      ctx.globalAlpha = Math.max(0, 0.7 - reveal.r / (w * 0.9)); ctx.strokeStyle = "#664cbc"; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(cx, cy, reveal.r, 0, 6.2832); ctx.stroke(); ctx.globalAlpha = 1;
+      marks.forEach(function (el) {                               // windows pop in as the bloom reaches them
+        var g = geom(MARKS[el.getAttribute("data-mark")]);
+        if (Math.hypot(g.x + g.w / 2 - cx, g.cy - cy) <= reveal.r) el.classList.add("in");
+      });
+    }
 
-    function frame(ms) { draw(ms / 1000); if (!reduceMotion.matches) requestAnimationFrame(frame); }
-    function start() { resize(); if (reduceMotion.matches) draw(0); else requestAnimationFrame(frame); }
+    var tLast = -1;
+    function readouts(t) {                                       // live numbers at t0, from the same waveforms
+      if (t - tLast < 0.9) return; tLast = t;
+      var xt = LEFT + T0 * (w - LEFT - RIGHT);
+      var hr = Math.round(94 + 9 * wave.hr(xt + t * 12)), rr = Math.round(19 + 3 * wave.resp(xt + t * 20, 150)), gl = Math.round(142 + 26 * wave.cgm(xt + t * 8));
+      chans.forEach(function (el) {
+        var v = $(".ch-val", el);
+        switch (el.getAttribute("data-ch")) {
+          case "ecg": v.textContent = (hr + 2) + " bpm proxy"; break;
+          case "resp": v.textContent = rr + " /min"; break;
+          case "hr": v.textContent = hr + " bpm"; break;
+          case "cgm": v.textContent = gl + " mg/dL"; break;
+        }
+      });
+    }
 
-    window.addEventListener("resize", function () { resize(); if (reduceMotion.matches) draw(0); }, { passive: true });
+    // the opening: a question is typed at t0, touches the strip, and the signal blooms open around it
+    var bloomStart = 0, typeTimer = 0;
+    function finish() {
+      reveal.phase = "done"; marks.forEach(function (el) { el.classList.add("in"); });
+      stage.classList.add("revealed"); probe.classList.remove("on", "touch"); probe.classList.add("docked");
+    }
+    function play() {
+      clearTimeout(typeTimer);
+      if (reduceMotion.matches) { finish(); draw(0); return; }
+      reveal.phase = "typing"; reveal.r = 0; bloomStart = 0;
+      marks.forEach(function (el) { el.classList.remove("in"); });
+      stage.classList.remove("revealed"); probe.classList.remove("docked", "touch"); probe.classList.add("on");
+      probeText.textContent = "";
+      var ci = 0;
+      (function tick() {
+        probeText.textContent = QUESTION.slice(0, ++ci);
+        if (ci < QUESTION.length) typeTimer = setTimeout(tick, 42 + Math.random() * 30);
+        else typeTimer = setTimeout(function () { probe.classList.add("touch"); typeTimer = setTimeout(function () { reveal.phase = "bloom"; }, 350); }, 320);
+      })();
+    }
+    function frame(ms) {
+      if (reveal.phase === "bloom") {
+        if (!bloomStart) bloomStart = ms;
+        var p = Math.min((ms - bloomStart) / 1700, 1), e = 1 - Math.pow(1 - p, 3);
+        reveal.r = e * Math.hypot(w, h) * 0.75;
+        if (p >= 1) finish();
+      }
+      draw(ms / 1000); readouts(ms / 1000);
+      if (!reduceMotion.matches) requestAnimationFrame(frame);
+    }
+    function start() { layout(); if (reduceMotion.matches) { finish(); draw(0); readouts(1); } else { requestAnimationFrame(frame); setTimeout(play, 700); } }
+    window.addEventListener("resize", function () { layout(); if (reduceMotion.matches) draw(0); }, { passive: true });
     reduceMotion.addEventListener("change", start);
     start();
 
-    function select(star) {
-      stars.forEach(function (s) { s.classList.toggle("active", s === star); });
-      stage.classList.toggle("has-active", !!star);
+    function select(el) {
+      active = el;
+      marks.forEach(function (m) { m.classList.toggle("active", m === el); });
+      stage.classList.toggle("has-active", !!el);
       if (reduceMotion.matches) draw(0);
     }
-    stars.forEach(function (s) {
-      s.addEventListener("mouseenter", function () { select(s); });
-      s.addEventListener("focus", function () { select(s); });
-      s.addEventListener("blur", function () { select(null); });
-      s.addEventListener("click", function (e) { e.stopPropagation(); select(s); });
+    marks.forEach(function (el) {
+      el.addEventListener("mouseenter", function () { select(el); });
+      el.addEventListener("focus", function () { select(el); });
+      el.addEventListener("blur", function () { select(null); });
+      el.addEventListener("click", function (e) { e.stopPropagation(); select(el); });
     });
-    stage.addEventListener("mouseleave", function () { select(null); });
+    t0el.addEventListener("click", function (e) { e.stopPropagation(); if (reveal.phase === "done") play(); });
+    stage.addEventListener("pointermove", function (e) { var r = stage.getBoundingClientRect(); spot = { x: e.clientX - r.left, y: e.clientY - r.top }; });
+    stage.addEventListener("pointerleave", function () { spot = null; select(null); });
     document.addEventListener("click", function () { select(null); });
     document.addEventListener("keydown", function (e) { if (e.key === "Escape") select(null); });
   })();
@@ -292,6 +435,12 @@
     fig4: {   // assets/fig4-signals.png, 1131 x 653
       "ecg":       [44, 13, 1110, 88],    "ecg-box":  [384, 13, 593, 91],
       "hr":        [44, 450, 1110, 516]
+    },
+    fig3: {   // assets/architecture.png, 2160 x 440
+      "enc":  [[36, 306, 530, 428], [580, 306, 1090, 428]],
+      "llm":  [[36, 118, 530, 266], [580, 118, 1090, 266]],
+      "hm":   [[850, 268, 1100, 338]],
+      "cmp":  [[1190, 36, 2150, 428]]
     }
   };
   $$(".ground").forEach(function (g) {
@@ -308,9 +457,10 @@
     function show(span) {
       holes.innerHTML = ""; boxes.innerHTML = "";
       if (!span) { svg.classList.remove("on"); return; }
-      var color = getComputedStyle(span.closest(".gblock")).getPropertyValue("--acc").trim() || "#664cbc";
+      var color = getComputedStyle(span.closest(".gblock") || span).getPropertyValue("--acc").trim() || "#664cbc";
       span.getAttribute("data-to").split(",").forEach(function (key) {
-        var b = regions[key.trim()]; if (!b) return;
+        var r0 = regions[key.trim()]; if (!r0) return;
+        (Array.isArray(r0[0]) ? r0 : [r0]).forEach(function (b) {
         var pad = 6;
         [["holes", "#000"], ["boxes", null]].forEach(function (t) {
           var r = document.createElementNS(SVGNS, "rect");
@@ -320,8 +470,20 @@
           if (t[1]) { r.setAttribute("fill", t[1]); holes.appendChild(r); }
           else { r.setAttribute("class", "box"); r.setAttribute("stroke", color); boxes.appendChild(r); }
         });
+        });
       });
       svg.classList.add("on");
+    }
+    // steps light the figure in turn until the reader points at one
+    var auto = +g.getAttribute("data-auto");
+    if (auto && !reduceMotion.matches && "IntersectionObserver" in window) {
+      var spans = $$(".gs", g), k = 0, timer = 0;
+      function step() { spans.forEach(function (s, i) { s.classList.toggle("auto", i === k); }); show(spans[k]); k = (k + 1) % spans.length; }
+      function stop() { clearInterval(timer); timer = 0; spans.forEach(function (s) { s.classList.remove("auto"); }); if (!pinned) show(null); }
+      new IntersectionObserver(function (entries) {
+        if (entries[0].isIntersecting) { if (!timer) { step(); timer = setInterval(step, auto); } } else stop();
+      }, { threshold: 0.4 }).observe(g);
+      g.addEventListener("pointerenter", stop);
     }
     $$(".gs", g).forEach(function (span) {
       span.setAttribute("tabindex", "0");

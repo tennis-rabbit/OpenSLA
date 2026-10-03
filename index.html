@@ -14,10 +14,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;1,400&family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=10">
+  <link rel="stylesheet" href="styles.css?v=11">
   <script>document.documentElement.classList.add("js");</script>
   <script src="vendor/lucide.min.js" defer></script>
-  <script src="app.js?v=7" defer></script>
+  <script src="app.js?v=8" defer></script>
 </head>
 <body id="top">
 
@@ -25,7 +25,7 @@
 <header class="nav" id="nav">
   <div class="nav-inner">
     <a class="brand" href="#top" aria-label="OpenSLA home">
-      <span class="mark" aria-hidden="true"></span>
+      <span class="win" aria-hidden="true"></span>
       <span class="brand-name">Open<span>SLA</span></span>
     </a>
     <button class="nav-toggle" type="button" aria-label="Toggle menu" aria-expanded="false"><i data-lucide="menu" aria-hidden="true"></i></button>
@@ -54,36 +54,42 @@
   </div>
 
   <div class="wrap hero-inner">
-    <!-- Live sensor traces; each marker is one thing OpenSLA does with them -->
+    <!-- A monitor strip: four channels scroll past a decision time; a typed question touches it and the
+         signal blooms open; each analysis window is one thing OpenSLA does -->
     <div class="stage reveal" aria-label="What OpenSLA does with a sensor recording">
       <canvas class="traces" aria-hidden="true"></canvas>
-      <span class="trace-name" style="top:18%" aria-hidden="true">ECG</span>
-      <span class="trace-name" style="top:40%" aria-hidden="true">Resp</span>
-      <span class="trace-name" style="top:62%" aria-hidden="true">HR</span>
-      <span class="trace-name" style="top:84%" aria-hidden="true">CGM</span>
+      <div class="channels" aria-hidden="true">
+        <div class="ch" data-ch="ecg"><span class="ch-name">ECG II</span><span class="ch-val">lead II</span></div>
+        <div class="ch" data-ch="resp"><span class="ch-name">Resp</span><span class="ch-val">18 /min</span></div>
+        <div class="ch" data-ch="hr"><span class="ch-name">HR</span><span class="ch-val">96 bpm</span></div>
+        <div class="ch" data-ch="cgm"><span class="ch-name">CGM</span><span class="ch-val">142 mg/dL</span></div>
+      </div>
+      <div class="probe" aria-hidden="true"><span class="probe-ring"></span><span class="probe-text"></span><span class="caret"></span></div>
+      <button class="t0" type="button" title="Replay"><span>t<sub>0</sub></span><em>decision time</em></button>
+      <div class="future-tag" aria-hidden="true">next 2 h</div>
 
-      <button class="star" style="--x:.21;--y:.18" type="button" aria-label="Multi-level actions">
-        <span class="dot"></span><span class="tag">Multi-level actions</span>
+      <button class="win" data-mark="actions" type="button" aria-label="Multi-level actions">
+        <span class="mk-tag"><b>A</b>Multi-level actions</span>
         <span class="card"><b>Whether, what kind, which one</b><span>One shared hierarchy across every dataset: action necessity, action category, and the fine-grained label.</span></span>
       </button>
-      <button class="star" style="--x:.49;--y:.40" type="button" aria-label="State understanding">
-        <span class="dot"></span><span class="tag">State understanding</span>
-        <span class="card"><b>It reads the signal itself</b><span>Generated captions recover rates, ranges, and waveform patterns directly from the sensor history.</span></span>
-      </button>
-      <button class="star" style="--x:.31;--y:.62" type="button" aria-label="Evidence grounding">
-        <span class="dot"></span><span class="tag">Evidence grounding</span>
-        <span class="card"><b>It says why</b><span>Each action comes with the sensor findings and individual context that support it.</span></span>
-      </button>
-      <button class="star" style="--x:.73;--y:.18" type="button" aria-label="Unseen actions">
-        <span class="dot"></span><span class="tag">Unseen actions</span>
+      <button class="win" data-mark="unseen" type="button" aria-label="Unseen actions">
+        <span class="mk-tag"><i></i>Unseen action</span>
         <span class="card"><b>Beyond the label set</b><span>An antibiotic that was never a training target is still told apart from no action, with the model frozen.</span></span>
       </button>
-      <button class="star ar" style="--x:.87;--y:.62" type="button" aria-label="New cohorts">
-        <span class="dot"></span><span class="tag">New cohorts</span>
+      <button class="win" data-mark="state" type="button" aria-label="State understanding">
+        <span class="mk-tag"><b>B</b>State understanding</span>
+        <span class="card"><b>It reads the signal itself</b><span>Generated captions recover rates, ranges, and waveform patterns directly from the sensor history.</span></span>
+      </button>
+      <button class="win" data-mark="evidence" type="button" aria-label="Evidence grounding">
+        <span class="mk-tag"><b>C</b>Evidence grounding</span>
+        <span class="card"><b>It says why</b><span>Each action comes with the sensor findings and individual context that support it.</span></span>
+      </button>
+      <button class="win" data-mark="cohort" type="button" aria-label="New cohorts">
+        <span class="mk-tag"><i></i>New cohorts</span>
         <span class="card"><b>Transfers without adaptation</b><span>Evaluated on an external clinical cohort, MIMIC-IV, with no additional fine-tuning.</span></span>
       </button>
-      <button class="star up" style="--x:.63;--y:.84" type="button" aria-label="Future state">
-        <span class="dot"></span><span class="tag">Future state</span>
+      <button class="win up ar" data-mark="future" type="button" aria-label="Future state">
+        <span class="mk-tag"><i></i>Future state</span>
         <span class="card"><b>A glimpse of what comes next</b><span>Frozen representations support readouts of glucose dynamics over the following two hours.</span></span>
       </button>
     </div>
@@ -205,7 +211,6 @@
 
         <div class="ask-foot">
           <button class="replay" type="button"><i data-lucide="rotate-ccw" aria-hidden="true"></i> Replay</button>
-          <p class="ask-note">Outputs from Fig.&nbsp;1 of the paper, abbreviated. Traces are illustrative.</p>
         </div>
       </div>
     </div>
@@ -244,7 +249,7 @@
             </ul>
           </div>
           <div class="chart-body" role="img" aria-label="Balanced accuracy of OpenSLA and the strongest baseline in each cohort"></div>
-          <p class="chart-note">Balanced accuracy (%), test split; 50 is chance. Baseline = best of eight compared methods per cohort. From Tables&nbsp;2&ndash;4.</p>
+          <p class="chart-note">Balanced accuracy (%); 50 is chance. Baseline = strongest of the eight compared methods. Tables&nbsp;2&ndash;4.</p>
         </div>
       </div>
     </div>
@@ -266,7 +271,7 @@
           <svg class="ground-mask" viewBox="0 0 1131 653" preserveAspectRatio="none" aria-hidden="true"></svg>
         </div>
         <button class="tool zoom-btn" type="button" data-src="assets/caption-example.png" data-title="Figure 4. Sensor-grounded caption generation." aria-label="Enlarge figure"><i data-lucide="expand" aria-hidden="true"></i></button>
-        <figcaption>Fig.&nbsp;4 &middot; the window behind the captions on the right.</figcaption>
+        <figcaption>Fig.&nbsp;4</figcaption>
       </figure>
 
       <div class="ground-text">
@@ -287,7 +292,7 @@
           <div><dt>3.18</dt><dd>EtCO&#8322; MAE, operating room<br><em>next best 5.47</em></dd></div>
           <div><dt>0.38</dt><dd>Carb amount MAE, CGM<br><em>next best 1.2</em></dd></div>
         </dl>
-        <p class="viz-note">Quantities read from generated captions versus ground truth, without a regression head. OpenSLA-H, Table&nbsp;5.</p>
+        <p class="viz-note">MAE of quantities read from the generated captions, OpenSLA-H &middot; Table&nbsp;5.</p>
       </div>
     </div>
   </div>
@@ -337,7 +342,7 @@
         <input id="alpha-range" class="alpha-range" type="range" min="0" max="1" step="0.01" value="0" aria-label="Interpolation ratio alpha">
         <div class="alpha-stops" aria-hidden="true"><span>0.05&nbsp;U</span><span>1.2&nbsp;U</span><span>7.7&nbsp;U</span><span>14.4&nbsp;U</span></div>
         <p class="alpha-read">Nearest real sample: <b class="alpha-dose">0.05 U</b> <span class="alpha-tag">endpoint</span></p>
-        <p class="viz-note">Separately, with the backbone frozen, ridge readouts recover the next two hours of glucose: mean-glucose error 24.0, against 26.5 for the best competing representation (Table&nbsp;14).</p>
+        <p class="viz-note">With the backbone frozen, ridge readouts recover the next two hours of glucose: mean-glucose error 24.0, against 26.5 for the best competing representation &middot; Table&nbsp;14.</p>
       </div>
     </div>
   </div>
@@ -405,21 +410,22 @@
   </div>
 
   <div class="wrap">
-    <ol class="timeline reveal" id="how-steps">
-      <li class="a-blue"><span class="tl-node">01</span><h3>Encode every channel</h3><p>Individual context goes through a text encoder; each sensor channel through a frozen signal encoder, giving a sequence of sensor tokens.</p></li>
-      <li class="a-green"><span class="tl-node">02</span><h3>Reason in the language model</h3><p>A LoRA-adapted language model reads text and sensor tokens together. Action heads predict necessity, category, and label; a caption decoder, conditioned on the predicted action, writes the explanation.</p></li>
-      <li class="a-purple"><span class="tl-node">03</span><h3>Compress with Hierarchical Memory</h3><p>OpenSLA-H adds learned queries that compress long recordings across resolutions &mdash; 14&times; fewer sensor tokens in clinical windows &mdash; while global queries keep the sample-level picture.</p></li>
-      <li class="a-orange"><span class="tl-node">04</span><h3>The paradigms it is compared with</h3><p>VLA-style action-only training, SensorLM-style contrastive alignment, and a supervised model, all on the same data and compute budget.</p></li>
-    </ol>
-
-    <figure class="visual-frame reveal" data-zoom>
-      <img src="assets/architecture.png" data-animation="assets/architecture.gif" width="2160" height="440" loading="lazy" alt="OpenSLA-B and OpenSLA-H architectures next to VLA-style, SensorLM, and supervised paradigms. OpenSLA-H adds Hierarchical Memory between the sensor encoder and the pretrained language model.">
-      <div class="frame-tools">
-        <button class="tool anim-toggle" type="button" hidden aria-label="Pause animation"><i data-lucide="pause" aria-hidden="true"></i></button>
+    <div class="ground arch reveal" data-ground="fig3" data-auto="2800">
+      <figure class="ground-fig" data-zoom>
+        <div class="ground-stage">
+          <img src="assets/architecture.png" width="2160" height="440" loading="lazy" alt="OpenSLA-B and OpenSLA-H architectures next to VLA-style, SensorLM, and supervised paradigms. OpenSLA-H adds Hierarchical Memory between the sensor encoder and the pretrained language model.">
+          <svg class="ground-mask" viewBox="0 0 2160 440" preserveAspectRatio="none" aria-hidden="true"></svg>
+        </div>
         <button class="tool zoom-btn" type="button" aria-label="Enlarge figure"><i data-lucide="expand" aria-hidden="true"></i></button>
-      </div>
-      <figcaption>OpenSLA-B and OpenSLA-H beside the paradigms they are compared with (Fig.&nbsp;3).</figcaption>
-    </figure>
+        <figcaption>Fig.&nbsp;3</figcaption>
+      </figure>
+      <ol class="how-steps">
+        <li class="gs a-blue" data-to="enc"><span class="step-no">01</span><h3>Encode every channel</h3><p>Individual context goes through a text encoder; each sensor channel through a frozen signal encoder, giving a sequence of sensor tokens.</p></li>
+        <li class="gs a-purple" data-to="llm"><span class="step-no">02</span><h3>Reason in the language model</h3><p>A LoRA-adapted language model reads text and sensor tokens together. Action heads predict necessity, category, and label; a caption decoder, conditioned on the predicted action, writes the explanation.</p></li>
+        <li class="gs a-green" data-to="hm"><span class="step-no">03</span><h3>Compress with Hierarchical Memory</h3><p>OpenSLA-H adds learned queries that compress long recordings across resolutions &mdash; 14&times; fewer sensor tokens in clinical windows &mdash; while global queries keep the sample-level picture.</p></li>
+        <li class="gs a-orange" data-to="cmp"><span class="step-no">04</span><h3>The paradigms it is compared with</h3><p>VLA-style action-only training, SensorLM-style contrastive alignment, and a supervised model, all on the same data and compute budget.</p></li>
+      </ol>
+    </div>
   </div>
 
   <div class="wrap">
@@ -436,7 +442,7 @@
           <svg class="ground-mask" viewBox="0 0 1086 687" preserveAspectRatio="none" aria-hidden="true"></svg>
         </div>
         <button class="tool zoom-btn" type="button" data-src="assets/caption-pipeline.png" data-title="Figure 2. Multi-faceted sensor-action captioning pipeline." aria-label="Enlarge figure"><i data-lucide="expand" aria-hidden="true"></i></button>
-        <figcaption>Fig.&nbsp;2 &middot; one clinical window and its context.</figcaption>
+        <figcaption>Fig.&nbsp;2</figcaption>
       </figure>
 
       <div class="ground-text">
@@ -538,7 +544,7 @@
 <!-- ============ Footer ============ -->
 <footer class="footer">
   <div class="wrap foot-inner">
-    <div class="foot-brand"><span class="mark" aria-hidden="true"></span><span>Open<span>SLA</span></span></div>
+    <div class="foot-brand"><span class="win" aria-hidden="true"></span><span>Open<span>SLA</span></span></div>
     <nav class="foot-links" aria-label="Footer">
       <a href="#idea">The idea</a>
       <a href="#capabilities">Capabilities</a>
