@@ -385,68 +385,79 @@
     nums.forEach(function (el) { io2.observe(el); });
   })();
 
-  /* ---------- One window, three questions: the answer streams in ---------- */
+  /* ---------- Chat: a conversation about one window. The reader (or a timer) asks; the answers stream in. ---------- */
   (function () {
-    var card = $(".ask");
-    if (!card) return;
-    var tabs = $$(".ask-tab", card), q = $(".chat-q", card), a = $(".chat-a", card);
+    var chat = $("#chat");
+    if (!chat) return;
+    var log = $(".chat-log", chat), chips = $$(".chip", chat), replay = $(".replay", chat);
+    var ORDER = ["state", "action", "why"];
     var caret = document.createElement("span"); caret.className = "caret"; caret.setAttribute("aria-hidden", "true");
-    var run = 0;
+    var run = 0, timer = 0, asked = {}, busy = false;
 
-    function stream(id) {
-      var token = ++run;
-      var tab = tabs.filter(function (t) { return t.getAttribute("data-ask") === id; })[0];
-      tabs.forEach(function (t) { var on = t === tab; t.classList.toggle("is-on", on); t.setAttribute("aria-selected", String(on)); });
-      q.textContent = tab.textContent.replace(/^[ABC]/, "").trim();
-      a.innerHTML = "";
-      a.appendChild($("#ans-" + id).content.cloneNode(true));
-      var leaves = $$("[data-type]", a);
-      if (reduceMotion.matches) { leaves.forEach(function (l) { l.textContent = l.getAttribute("data-type"); }); return; }
+    function el(cls, tag) { var n = document.createElement(tag || "div"); n.className = cls; return n; }
+    function down() { log.scrollTop = log.scrollHeight; }
+    function setBusy(b) { busy = b; chat.classList.toggle("busy", b); }
+    function userMsg(text, withAttach) {
+      var m = el("msg user"), av = el("avatar"), b = el("bubble");
+      av.textContent = "You";
+      if (withAttach) { b.appendChild($("#chat-attach").content.cloneNode(true)); var im = $("img", b); if (im) im.addEventListener("load", down); }
+      var p = document.createElement("p"); p.textContent = text; b.appendChild(p);
+      m.appendChild(av); m.appendChild(b); log.appendChild(m); down();
+    }
+    function botBubble() {
+      var m = el("msg bot"), av = el("avatar"), b = el("bubble");
+      av.textContent = "S";
+      b.innerHTML = '<span class="typing"><i></i><i></i><i></i></span>';
+      m.appendChild(av); m.appendChild(b); log.appendChild(m); down();
+      return b;
+    }
+    function stream(b, id, done) {
+      var token = run;
+      b.innerHTML = ""; b.appendChild($("#turn-" + id).content.cloneNode(true));
+      var leaves = $$("[data-type]", b);
+      if (reduceMotion.matches) { leaves.forEach(function (l) { l.textContent = l.getAttribute("data-type"); }); down(); done(); return; }
       var li = 0;
-      function next() {
+      (function next() {
         if (token !== run) return;
-        if (li >= leaves.length) { setTimeout(function () { if (token === run) caret.remove(); }, 1800); return; }
+        if (li >= leaves.length) { caret.remove(); done(); return; }
         var leaf = leaves[li++], full = leaf.getAttribute("data-type"), ci = 0;
         leaf.textContent = ""; leaf.appendChild(caret);
         (function tick() {
           if (token !== run) return;
-          ci++;
-          leaf.textContent = full.slice(0, ci); leaf.appendChild(caret);
-          if (ci < full.length) setTimeout(tick, 14 + Math.random() * 22);
-          else setTimeout(next, 260);
+          ci++; leaf.textContent = full.slice(0, ci); leaf.appendChild(caret); down();
+          if (ci < full.length) timer = setTimeout(tick, 9 + Math.random() * 16);
+          else timer = setTimeout(next, 220);
         })();
-      }
-      setTimeout(next, 350);
+      })();
     }
-
-    tabs.forEach(function (t) { t.addEventListener("click", function () { stream(t.getAttribute("data-ask")); }); });
-    $(".replay", card).addEventListener("click", function () {
-      stream(tabs.filter(function (t) { return t.classList.contains("is-on"); })[0].getAttribute("data-ask"));
-    });
-
-    // start the first answer when the card comes into view
+    function ask(id) {
+      if (asked[id] || busy) return;
+      clearTimeout(timer); asked[id] = true; setBusy(true);
+      var chip = chips.filter(function (c) { return c.getAttribute("data-turn") === id; })[0];
+      chip.classList.add("done"); chip.disabled = true;
+      userMsg(chip.textContent, Object.keys(asked).length === 1);
+      var b = botBubble(), token = run;
+      timer = setTimeout(function () {
+        if (token !== run) return;
+        stream(b, id, function () {
+          setBusy(false);
+          var nextId = ORDER.filter(function (k) { return !asked[k]; })[0];   // the conversation goes on by itself
+          if (nextId) timer = setTimeout(function () { if (token === run) ask(nextId); }, reduceMotion.matches ? 0 : 1700);
+        });
+      }, reduceMotion.matches ? 0 : 850);
+    }
+    function reset() {
+      run++; clearTimeout(timer); setBusy(false); asked = {}; log.innerHTML = "";
+      chips.forEach(function (c) { c.classList.remove("done"); c.disabled = false; });
+    }
+    chips.forEach(function (c) { c.addEventListener("click", function () { ask(c.getAttribute("data-turn")); }); });
+    replay.addEventListener("click", function () { reset(); ask("state"); });
     if ("IntersectionObserver" in window && !reduceMotion.matches) {
       var seen = new IntersectionObserver(function (entries) {
-        if (entries.some(function (en) { return en.isIntersecting; })) { seen.disconnect(); stream("a"); }
-      }, { threshold: 0.4 });
-      seen.observe(card);
-    } else { stream("a"); }
-
-    var holder = $(".ask-traces", card);
-    [
-      { name: "Resp", color: "#4f9d69", amp: 15, fn: function (x) { return wave.resp(x, 15.5); } },
-      { name: "ECG",  color: "#3f7fc4", amp: 26, fn: function (x) { return wave.ecg(x, 34) - 0.32; } },
-      { name: "HR",   color: "#d9577a", amp: 12, fn: function (x) { return wave.hr(x * 3.2); } }
-    ].forEach(function (tr) {
-      var d = "";
-      for (var x = 0; x <= 300; x += 1) d += (x ? "L" : "M") + x + " " + (22 - tr.amp * tr.fn(x)).toFixed(1);
-      var row = document.createElement("div");
-      row.className = "ask-trace";
-      row.innerHTML = "<span>" + tr.name + "</span>" +
-        '<svg viewBox="0 0 300 44" preserveAspectRatio="none"><path d="' + d + '" fill="none" stroke="' + tr.color +
-        '" stroke-width="1.5" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></svg>';
-      holder.appendChild(row);
-    });
+        if (entries.some(function (en) { return en.isIntersecting; })) { seen.disconnect(); ask("state"); }
+      }, { threshold: 0.35 });
+      seen.observe(chat);
+    } else { ask("state"); }
   })();
 
   /* ---------- Grounding: hover a caption phrase, the region it comes from lights up ----------

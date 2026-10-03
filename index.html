@@ -14,10 +14,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;1,400&family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=16">
+  <link rel="stylesheet" href="styles.css?v=17">
   <script>document.documentElement.classList.add("js");</script>
   <script src="vendor/lucide.min.js" defer></script>
-  <script src="app.js?v=9" defer></script>
+  <script src="app.js?v=10" defer></script>
 </head>
 <body id="top">
 
@@ -161,7 +161,7 @@
   </div>
 </section>
 
-<!-- ============ Capabilities: one window, three questions, answered live ============ -->
+<!-- ============ Capabilities: a conversation about one window ============ -->
 <section class="section" id="capabilities">
   <div class="wrap">
     <div class="section-head reveal">
@@ -170,52 +170,43 @@
       <p>The same model answers all three from one sensor window and the individual&rsquo;s context.</p>
     </div>
 
-    <div class="ask reveal">
-      <div class="ask-in">
-        <span class="ask-label">Sensor window</span>
-        <div class="ask-traces" aria-hidden="true"></div>
-        <span class="ask-label">Individual context</span>
-        <p class="ask-context">67-year-old male &middot; complaint: fever &middot; prior history&nbsp;&hellip;</p>
+    <div class="chat reveal" id="chat">
+      <div class="chat-top"><span class="mark" aria-hidden="true"></span><b>OpenSLA</b><span class="chat-sub">MC-MED &middot; 30-minute window</span></div>
+      <div class="chat-log" aria-live="polite"></div>
+      <div class="chat-bar">
+        <div class="chips" role="group" aria-label="Ask">
+          <button class="chip" type="button" data-turn="state">What is happening?</button>
+          <button class="chip" type="button" data-turn="action">What action follows?</button>
+          <button class="chip" type="button" data-turn="why">Why this action?</button>
+        </div>
+        <button class="replay" type="button" aria-label="Replay the conversation"><i data-lucide="rotate-ccw" aria-hidden="true"></i></button>
       </div>
 
-      <div class="ask-out">
-        <div class="ask-tabs" role="tablist" aria-label="Question">
-          <button class="ask-tab is-on" role="tab" type="button" aria-selected="true" data-ask="a"><span class="ask-letter">A</span>What action follows?</button>
-          <button class="ask-tab" role="tab" type="button" aria-selected="false" data-ask="b"><span class="ask-letter">B</span>What is happening?</button>
-          <button class="ask-tab" role="tab" type="button" aria-selected="false" data-ask="c"><span class="ask-letter">C</span>Why this action?</button>
+      <template id="chat-attach">
+        <div class="attach">
+          <img src="assets/chat-window.png" width="742" height="609" alt="A 30-minute window of ECG-II, plethysmography, respiration, respiratory rate, heart rate, pain score, perfusion, and SpO2.">
+          <p><b>60-year-old male.</b> Chief complaint: abdominal pain, nausea. Prior history: interstitial pulmonary disease, hypoxemia, &hellip;</p>
         </div>
-
-        <div class="chat" aria-live="polite">
-          <div class="msg user"><span class="who">Query</span><p class="chat-q"></p></div>
-          <div class="msg bot"><span class="who">OpenSLA</span><div class="chat-a"></div></div>
-        </div>
-
-        <!-- answer templates; leaf elements with data-type are streamed in -->
-        <template id="ans-a">
-          <p class="ask-kind">Multi-level action prediction</p>
-          <ol class="levels">
-            <li><span>Necessity</span><b data-type="Yes"></b></li>
-            <li><span>Category</span><b data-type="nebulizer_treatment"></b></li>
-            <li><span>Label</span><b data-type="NEBULIZER"></b></li>
-          </ol>
-        </template>
-        <template id="ans-b">
-          <p class="ask-kind">Sensor-state understanding</p>
-          <dl class="facet-lines">
-            <div class="a-blue"><dt>Observational</dt><dd data-type="Resp waveform: fast breathing; rate proxy 39.1/min, IQR 1.00 …"></dd></div>
-            <div class="a-orange"><dt>Relational</dt><dd data-type="Breathing rate is improving with RR above expected range …"></dd></div>
-            <div class="a-green"><dt>Global &amp; contextual</dt><dd data-type="Context includes presentation mentions fever or infection …"></dd></div>
-          </dl>
-        </template>
-        <template id="ans-c">
-          <p class="ask-kind">Action-evidence grounding</p>
-          <blockquote class="evidence"><span data-type="Rapid breathing provides context for the recorded "></span><b data-type="nebulizer"></b><span data-type="."></span></blockquote>
-        </template>
-
-        <div class="ask-foot">
-          <button class="replay" type="button"><i data-lucide="rotate-ccw" aria-hidden="true"></i> Replay</button>
-        </div>
-      </div>
+      </template>
+      <template id="turn-state">
+        <p class="ask-kind">Sensor-state understanding</p>
+        <dl class="facet-lines">
+          <div class="a-blue"><dt>Observational</dt><dd data-type="The lead II ECG showed an irregular-periodicity proxy, with an estimated rate of 100.2 beats/min. Respiratory rate was elevated, with a median of 26 breaths/min and a range of 23–30 across 31 measurements."></dd></div>
+          <div class="a-orange"><dt>Relational</dt><dd data-type="Numerical respiratory-rate measurements and the respiration waveform both indicated rapid breathing."></dd></div>
+          <div class="a-green"><dt>Global</dt><dd data-type="Overall findings suggested a pain and nausea symptom burden, supported by the presenting complaints, elevated heart rate, and a pain score of 5."></dd></div>
+        </dl>
+      </template>
+      <template id="turn-action">
+        <p class="ask-kind">Multi-level action prediction</p>
+        <ol class="levels two">
+          <li><span>Necessity</span><b data-type="Yes"></b></li>
+          <li><span>Category</span><b data-type="Antiemetic"></b></li>
+        </ol>
+      </template>
+      <template id="turn-why">
+        <p class="ask-kind">Action-evidence grounding</p>
+        <blockquote class="evidence"><span data-type="Findings that bear on pain or nausea management are high pain reported nausea provides symptom evidence to the "></span><b data-type="antiemetic"></b><span data-type="."></span></blockquote>
+      </template>
     </div>
   </div>
 </section>
@@ -225,18 +216,12 @@
   <div class="wrap">
     <div class="section-head reveal">
       <span class="kicker">What we found</span>
-      <p>Six real-world cohorts, three healthcare settings, and comparisons against supervised models, time-series foundation models, sensor-language models, and multi-modal LLMs.</p>
     </div>
 
     <div class="split split-chart">
       <div class="split-text reveal">
         <h2>Knows when to act &mdash; in every cohort.</h2>
         <p>Best action-necessity accuracy in all six cohorts. Best category in five.</p>
-        <ul class="check-list">
-          <li><i data-lucide="check" aria-hidden="true"></i><span>Largest gains where context matters most: clinical care and the operating room.</span></li>
-          <li><i data-lucide="check" aria-hidden="true"></i><span>Sensor-only baselines struggle most in the operating room.</span></li>
-          <li><i data-lucide="minus" aria-hidden="true"></i><span>Still hard: insulin category on CGM &mdash; the carbohydrates haven&rsquo;t happened yet.</span></li>
-        </ul>
       </div>
 
       <div class="split-visual reveal">
@@ -324,8 +309,7 @@
 <section class="section" id="structure">
   <div class="wrap">
     <div class="section-head reveal">
-      <h2>Walk between two doses, and the doses in between line up.</h2>
-      <p>Drag &alpha; between two real samples. The nearest real sample&rsquo;s dose reads off.</p>
+      <h2>Actions form a continuous space. Interpolate between two embeddings, and the actions in between fall into place.</h2>
     </div>
 
     <div class="alpha reveal">
@@ -345,7 +329,6 @@
         <input id="alpha-range" class="alpha-range" type="range" min="0" max="1" step="0.01" value="0" aria-label="Interpolation ratio alpha">
         <div class="alpha-stops" aria-hidden="true"><span>0.05&nbsp;U</span><span>1.2&nbsp;U</span><span>7.7&nbsp;U</span><span>14.4&nbsp;U</span></div>
         <p class="alpha-read">Nearest real sample: <b class="alpha-dose">0.05 U</b> <span class="alpha-tag">endpoint</span></p>
-        <p class="viz-note">Frozen backbone, ridge readout: next-two-hour mean glucose error 24.0, best competitor 26.5 &middot; Table&nbsp;14.</p>
       </div>
     </div>
   </div>
@@ -357,32 +340,32 @@
     <div class="section-head reveal">
       <span class="kicker">Also worth knowing</span>
       <h2>Language supervision is a first-order choice</h2>
-      <p>What the ablations say.</p>
+      <p>Six questions, answered by the ablations.</p>
     </div>
 
     <ul class="blist reveal">
       <li class="bl-item a-purple">
-        <button class="bl-head" type="button" aria-expanded="false"><span class="bl-dot"></span><span class="bl-title">Captions beat action-only training</span><i data-lucide="chevron-down" class="bl-ico" aria-hidden="true"></i></button>
+        <button class="bl-head" type="button" aria-expanded="false"><span class="bl-dot"></span><span class="bl-title">Do captions beat action-only training?</span><i data-lucide="chevron-down" class="bl-ico" aria-hidden="true"></i></button>
         <div class="bl-body"><div><p>Action-only training is the weakest variant on every endpoint. VitalDB necessity AUROC: 54.1 &rarr; 74.9 with captions and action conditioning.</p></div></div>
       </li>
       <li class="bl-item a-blue">
-        <button class="bl-head" type="button" aria-expanded="false"><span class="bl-dot"></span><span class="bl-title">Action captions carry the signal</span><i data-lucide="chevron-down" class="bl-ico" aria-hidden="true"></i></button>
+        <button class="bl-head" type="button" aria-expanded="false"><span class="bl-dot"></span><span class="bl-title">Which caption facet carries the signal?</span><i data-lucide="chevron-down" class="bl-ico" aria-hidden="true"></i></button>
         <div class="bl-body"><div><p>Add action-evidence captions: necessity AUROC 81.6 &rarr; 83.4 on MOVER, 64.3 &rarr; 74.9 on VitalDB.</p></div></div>
       </li>
       <li class="bl-item a-green">
-        <button class="bl-head" type="button" aria-expanded="false"><span class="bl-dot"></span><span class="bl-title">Condition the caption on the predicted action</span><i data-lucide="chevron-down" class="bl-ico" aria-hidden="true"></i></button>
+        <button class="bl-head" type="button" aria-expanded="false"><span class="bl-dot"></span><span class="bl-title">Does conditioning on the predicted action help?</span><i data-lucide="chevron-down" class="bl-ico" aria-hidden="true"></i></button>
         <div class="bl-body"><div><p>Drop action conditioning or the fusion decoder and you still beat action-only. The full model wins all four operating-room endpoints.</p></div></div>
       </li>
       <li class="bl-item a-orange">
-        <button class="bl-head" type="button" aria-expanded="false"><span class="bl-dot"></span><span class="bl-title">Adapt the language model directly</span><i data-lucide="chevron-down" class="bl-ico" aria-hidden="true"></i></button>
+        <button class="bl-head" type="button" aria-expanded="false"><span class="bl-dot"></span><span class="bl-title">How should the language model be adapted?</span><i data-lucide="chevron-down" class="bl-ico" aria-hidden="true"></i></button>
         <div class="bl-body"><div><p>Direct LoRA beats Flamingo-style cross-attention and LLaVA-style adapters on all four endpoints. VitalDB necessity AUROC: 74.9 vs 68.9 vs 54.4.</p></div></div>
       </li>
       <li class="bl-item a-purple">
-        <button class="bl-head" type="button" aria-expanded="false"><span class="bl-dot"></span><span class="bl-title">Compress long recordings</span><i data-lucide="chevron-down" class="bl-ico" aria-hidden="true"></i></button>
+        <button class="bl-head" type="button" aria-expanded="false"><span class="bl-dot"></span><span class="bl-title">Can long recordings be compressed?</span><i data-lucide="chevron-down" class="bl-ico" aria-hidden="true"></i></button>
         <div class="bl-body"><div><p>Hierarchical Memory: 14.5&times; fewer sensor tokens in clinical windows, 4.7&times; in the operating room; forward passes 3.4&times; and 1.7&times; faster.</p></div></div>
       </li>
       <li class="bl-item a-blue">
-        <button class="bl-head" type="button" aria-expanded="false"><span class="bl-dot"></span><span class="bl-title">It carries over to a new hospital cohort</span><i data-lucide="chevron-down" class="bl-ico" aria-hidden="true"></i></button>
+        <button class="bl-head" type="button" aria-expanded="false"><span class="bl-dot"></span><span class="bl-title">Does it transfer to a new hospital cohort?</span><i data-lucide="chevron-down" class="bl-ico" aria-hidden="true"></i></button>
         <div class="bl-body"><div><p>MIMIC-IV, zero fine-tuning: 74.4 vs 69.3 necessity balanced accuracy against the best adapted baseline.</p></div></div>
       </li>
     </ul>
@@ -491,21 +474,18 @@
         <span class="mc-icon"><i data-lucide="heart-pulse" aria-hidden="true"></i></span>
         <h3>Clinical care</h3>
         <p>Waveforms and vitals with clinical context. Medications, procedures, diagnostics.</p>
-        <p class="domain-meta">39 action categories &middot; 106,596 training samples &middot; ~46,000 individuals</p>
         <span class="chips"><span>MC-MED</span><span>MIMIC-III</span><span>MIMIC-IV &middot; external</span></span>
       </article>
       <article class="domain a-green">
         <span class="mc-icon"><i data-lucide="stethoscope" aria-hidden="true"></i></span>
         <h3>Operating room</h3>
         <p>Perioperative waveforms and measurements, aligned with the actions taken in surgery.</p>
-        <p class="domain-meta">17 action categories &middot; 162,665 training samples &middot; ~31,000 surgical cases</p>
         <span class="chips"><span>MOVER</span><span>VitalDB</span></span>
       </article>
       <article class="domain a-orange">
         <span class="mc-icon"><i data-lucide="syringe" aria-hidden="true"></i></span>
         <h3>Metabolic health</h3>
         <p>Glucose and basal insulin from daily life. The action is a bolus.</p>
-        <p class="domain-meta">4 dose categories &middot; 272,000 training windows, sampled from ~2.6&nbsp;million</p>
         <span class="chips"><span>MetaboNet</span><span>PEDAP</span></span>
       </article>
     </div>
