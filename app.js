@@ -583,12 +583,12 @@
     if (!box) return;
     var range = $(".alpha-range", box), val = $(".alpha-val", box), dose = $(".alpha-dose", box), tag = $(".alpha-tag", box);
     var halo = $(".alpha-halo", box), dot = $(".alpha-dot", box);
-    // the four stops on the dashed path in panel (a), in image pixels of action-representations.png (2789 x 704)
+    // the four stops on the dashed path in panel (A), in image pixels of action-representations.png (2789 x 701)
     var STOPS = [
-      { a: 0.0, x: 75,  y: 144, dose: "0.05 U", tag: "endpoint" },
-      { a: 0.4, x: 340, y: 310, dose: "1.2 U",  tag: "retrieved" },
-      { a: 0.8, x: 608, y: 468, dose: "7.7 U",  tag: "retrieved" },
-      { a: 1.0, x: 747, y: 546, dose: "14.4 U", tag: "endpoint" }
+      { a: 0.0, x: 78,  y: 141, dose: "0.05 U", tag: "endpoint" },
+      { a: 0.4, x: 343, y: 307, dose: "1.2 U",  tag: "retrieved" },
+      { a: 0.8, x: 611, y: 465, dose: "7.7 U",  tag: "retrieved" },
+      { a: 1.0, x: 750, y: 543, dose: "14.4 U", tag: "endpoint" }
     ];
     function place(a) {
       var i = 0; while (i < STOPS.length - 2 && a > STOPS[i + 1].a) i++;
